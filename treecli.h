@@ -78,7 +78,7 @@ struct treecli_parser {
 	int32_t (*print_handler)(char *line, void *ctx);
 	void *print_handler_ctx;
 	
-	/* TODO: output function */
+	uint32_t error_pos;
 	
 };
 
@@ -89,7 +89,15 @@ struct treecli_context {
 	
 };
 
-
+struct treecli_matches {
+	uint32_t count;
+	const struct treecli_node *subnode;
+	const struct treecli_dnode *dsubnode;
+	const struct treecli_command *command;
+	const struct treecli_value *value;
+	
+	
+};
 
 
 
@@ -117,11 +125,22 @@ int32_t treecli_parser_free(struct treecli_parser *parser);
 int32_t treecli_parser_parse_line(struct treecli_parser *parser, const char *line);
 #define TREECLI_PARSER_PARSE_LINE_OK 0
 #define TREECLI_PARSER_PARSE_LINE_FAILED -1
+#define TREECLI_PARSER_PARSE_LINE_NO_MATCHES -2
+#define TREECLI_PARSER_PARSE_LINE_MULTIPLE_MATCHES -3
 
 int32_t treecli_parser_set_print_handler(struct treecli_parser *parser, int32_t (*print_handler)(char *line, void *ctx), void *ctx);
 #define TREECLI_PARSER_SET_PRINT_HANDLER_OK 0
 #define TREECLI_PARSER_SET_PRINT_HANDLER_FAILED -1
 
+int32_t treecli_parser_get_matches(struct treecli_parser *parser, const struct treecli_node *node, char *token, uint32_t len, struct treecli_matches *matches);
+#define TREECLI_PARSER_GET_MATCHES_SUBNODE 4
+#define TREECLI_PARSER_GET_MATCHES_VALUE 3
+#define TREECLI_PARSER_GET_MATCHES_COMMAND 2
+#define TREECLI_PARSER_GET_MATCHES_TOP 1
+#define TREECLI_PARSER_GET_MATCHES_UP 0
+#define TREECLI_PARSER_GET_MATCHES_FAILED -1
+#define TREECLI_PARSER_GET_MATCHES_MULTIPLE -2
+#define TREECLI_PARSER_GET_MATCHES_NONE -3
 
 
 

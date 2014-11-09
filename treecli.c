@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <assert.h>
+#include <string.h>
 
 #include "treecli.h"
 
@@ -29,7 +30,7 @@ int32_t treecli_print_tree(const struct treecli_node *top, int32_t indent) {
 /**
  * Search command line and try to get next token. Token is a word describing one
  * subnode, command or value name consisting of alphanumeric characters (lower and
- * uppoer case), underscore and dash.
+ * uppoer case), underscore, dash, dot and slash.
  * Input line position is being incremented during search and after execution it
  * points to a position where the search can continue (this apply also if function
  * fails).
@@ -60,7 +61,7 @@ int32_t treecli_token_get(struct treecli_parser *parser, char **pos, char **toke
 	/* mark start of the token and go forward while valid characters are found*/
 	*token = *pos;
 	while ((**pos >= 'a' && **pos <= 'z') || (**pos >= 'A' && **pos <= 'Z') ||
-	       (**pos >= '0' && **pos <= '9') || **pos == '-' || **pos == '_') {
+	       (**pos >= '0' && **pos <= '9') || **pos == '-' || **pos == '_' || **pos == '.' || **pos == '/') {
 	
 		(*pos)++;
 	}
@@ -114,7 +115,7 @@ int32_t treecli_parser_free(struct treecli_parser *parser) {
 /**
  * Function parses one line of commands and performs configuration tree traversal
  * to set active node for command execution, sets or reads values and executes
- * commands.
+ * commands (if requested).
  * 
  * @param parser A parser context used to do command parsing.
  * @param line String with node names, commands and value set/get specifications.
@@ -122,20 +123,135 @@ int32_t treecli_parser_free(struct treecli_parser *parser) {
  * @return TREECLI_PARSER_PARSE_LINE_OK if the whole line was parsed successfully.
  */
 int32_t treecli_parser_parse_line(struct treecli_parser *parser, const char *line) {
-	
+
+	int32_t res;
+	char *pos = (char *)line;
+	char *token = NULL;
+	uint32_t len;
+	const struct treecli_node *current = parser->top;
+
+	/* Save the current position as error position in case something goes wrong.
+	 * It marks context of failed return value (ie. where the error happened) */
+	while ((res = treecli_token_get(parser, &pos, &token, &len)) == TREECLI_TOKEN_GET_OK) {
+
+		struct treecli_matches matches;
+
+		int32_t ret = treecli_parser_get_matches(parser, current, token, len, &matches);
+		if (ret == TREECLI_PARSER_GET_MATCHES_FAILED) {
+			return TREECLI_PARSER_PARSE_LINE_FAILED;
+		}
+
+		if (ret == TREECLI_PARSER_GET_MATCHES_NONE) {
+			/* return no matches */
+			parser->error_pos = (uint32_t)(pos - line) - len;
+			return TREECLI_PARSER_PARSE_LINE_NO_MATCHES;
+		}
+		if (ret == TREECLI_PARSER_GET_MATCHES_MULTIPLE) {
+			/* return multiple matches */
+			parser->error_pos = (uint32_t)(pos - line) - len;
+			return TREECLI_PARSER_PARSE_LINE_MULTIPLE_MATCHES;
+		}
+
+		if (matches.count == 1) {
+
+			if (ret == TREECLI_PARSER_GET_MATCHES_TOP) {
+				current = parser->top;
+				printf("going to top\n");
+			}
+
+			if (ret == TREECLI_PARSER_GET_MATCHES_UP) {
+				current = parser->top;
+				printf("goint up (unimplemented)\n");
+			}
+
+			if (ret == TREECLI_PARSER_GET_MATCHES_SUBNODE) {
+				current = matches.subnode;
+				printf("going to subnode %s\n", current->name);
+			}
+
+			if (ret == TREECLI_PARSER_GET_MATCHES_COMMAND) {
+				printf("command %s matched\n", matches.command->name);
+			}
+
+			if (ret == TREECLI_PARSER_GET_MATCHES_VALUE) {
+				printf("value %s matched\n", matches.value->name);
+			}
+		}
+	}
+
+	return TREECLI_PARSER_PARSE_LINE_OK;
 }
 
 
 int32_t treecli_parser_set_print_handler(struct treecli_parser *parser, int32_t (*print_handler)(char *line, void *ctx), void *ctx) {
 	assert(parser != NULL);
 	assert(print_handler != NULL);
-	
+
 	parser->print_handler = print_handler;
 	parser->print_handler_ctx = ctx;
-	
+
 	return TREECLI_PARSER_SET_PRINT_HANDLER_OK;
 	
 }
+
+
+int32_t treecli_parser_get_matches(struct treecli_parser *parser, const struct treecli_node *node, char *token, uint32_t len, struct treecli_matches *matches) {
+	assert(parser != NULL);
+	assert(token != NULL);
+	assert(matches != NULL);
+
+	matches->count = 0;
+	int32_t ret = TREECLI_PARSER_GET_MATCHES_NONE;
+
+	if (!strncmp(token, "..", 2) && len == 2) {
+		matches->count++;
+		ret = TREECLI_PARSER_GET_MATCHES_UP;
+	}
+
+	if (!strncmp(token, "/", 1) && len == 1) {
+		matches->count++;
+		ret = TREECLI_PARSER_GET_MATCHES_TOP;
+	}
+
+	const struct treecli_node *n = node->subnodes;
+	while (n != NULL) {
+		if (len <= strlen(n->name) && !strncmp(token, n->name, len)) {
+			matches->count++;
+			matches->subnode = n;
+			ret = TREECLI_PARSER_GET_MATCHES_SUBNODE;
+		}
+		n = n->next;
+	}
+
+	const struct treecli_value *v = node->values;
+	while (v != NULL) {
+		if (len <= strlen(v->name) && !strncmp(token, v->name, len)) {
+			matches->count++;
+			matches->value = v;
+			ret = TREECLI_PARSER_GET_MATCHES_VALUE;
+		}
+		v = v->next;
+	}
+
+	const struct treecli_command *c = node->commands;
+	while (c != NULL) {
+		if (len <= strlen(c->name) && !strncmp(token, c->name, len)) {
+			matches->count++;
+			matches->command = c;
+			ret = TREECLI_PARSER_GET_MATCHES_COMMAND;
+		}
+		c = c->next;
+	}
+
+	if (matches->count == 1) {
+		return ret;
+	} else if (matches->count > 1) {
+		return TREECLI_PARSER_GET_MATCHES_MULTIPLE;
+	}
+
+	return TREECLI_PARSER_GET_MATCHES_NONE;
+}
+
 
 
 int32_t treecli_parse_token(struct treecli_parser *parser, const char *token) {
