@@ -7,6 +7,13 @@
 
 #define TREECLI_VALUE_UINT32 0
 
+#define TREECLI_TREE_MAX_DEPTH 8
+
+
+
+struct treecli_parser;
+struct treecli_parser_pos;
+
 /**
  * Dnode specifies how are node childs generated during runtime. It can be used
  * to dynamically generate configuration subtrees for components not known at
@@ -17,6 +24,7 @@ struct treecli_dnode {
 	const struct treecli_dnode *next;
 };
 
+
 struct treecli_command {
 	
 	/* TODO:
@@ -24,14 +32,11 @@ struct treecli_command {
 	 */
 	const char *name;
 	const struct treecli_command *next;
+
+	int32_t (*exec)(struct treecli_parser *parser, void *exec_context);
+	void *exec_context;
 };
 
-/**
- * Single node in the tree hierarchy. Nodes can be chained together on the same
- * level using "next" field (creating linked list of nodes, last one must have it
- * set to NULL). There must be only one top level node (conventionally named "/")
- * which is used to reference the whole tree.
- */
 struct treecli_value {
 	const char *name;
 
@@ -54,6 +59,12 @@ struct treecli_value {
 	const struct treecli_value *next;
 };
 
+/**
+ * Single node in the tree hierarchy. Nodes can be chained together on the same
+ * level using "next" field (creating linked list of nodes, last one must have it
+ * set to NULL). There must be only one top level node (conventionally named "/")
+ * which is used to reference the whole tree.
+ */
 struct treecli_node {
 	/* TODO:
 	 */
@@ -80,6 +91,28 @@ struct treecli_parser {
 	
 	uint32_t error_pos;
 	
+	int allow_exec;
+};
+
+
+/**
+ * One level in hierarchical tree structure can be described by a statically
+ * initialized node or dynamically created node (dnode specification and its index).
+ */
+struct treecli_parser_pos_level {
+	const struct treecli_node node;
+	const struct treecli_node dnode;
+	uint32_t dnode_index;
+};
+
+/**
+ * The whole path in the hierarchical tree structure from its root up to the
+ * current working node is described as an array of nodes (static or dynamic) and
+ * index of actual working node (which also determines the tree depth).
+ */
+struct treecli_parser_pos {
+	struct treecli_parser_pos_level levels[TREECLI_TREE_MAX_DEPTH];
+	uint32_t depth;
 };
 
 

@@ -128,6 +128,8 @@ int32_t treecli_parser_parse_line(struct treecli_parser *parser, const char *lin
 	char *pos = (char *)line;
 	char *token = NULL;
 	uint32_t len;
+
+	/* TODO: change to start on current treecli parser position instead of top */
 	const struct treecli_node *current = parser->top;
 
 	/* Save the current position as error position in case something goes wrong.
@@ -171,14 +173,22 @@ int32_t treecli_parser_parse_line(struct treecli_parser *parser, const char *lin
 
 			if (ret == TREECLI_PARSER_GET_MATCHES_COMMAND) {
 				printf("command %s matched\n", matches.command->name);
+				if (parser->allow_exec) {
+					if (matches.command->exec != NULL) {
+						matches.command->exec(parser, matches.command->exec_context);
+					}
+				}
 			}
 
 			if (ret == TREECLI_PARSER_GET_MATCHES_VALUE) {
 				printf("value %s matched\n", matches.value->name);
+				/* TODO: get operation */
+				/* TODO: get literal */
 			}
 		}
 	}
 
+	/* TODO: update parser tree position */
 	return TREECLI_PARSER_PARSE_LINE_OK;
 }
 
@@ -253,30 +263,3 @@ int32_t treecli_parser_get_matches(struct treecli_parser *parser, const struct t
 }
 
 
-
-int32_t treecli_parse_token(struct treecli_parser *parser, const char *token) {
-	/* ako parameter berie aktualny node, na ktorom zacina parsovanie.
-	 * dopredu sa moze hybat len rekurziou, dozadu sa moze hybat volne.
-	 * ".." posuva o poziciu spat, "/" posuva na zaciatocnu poziciu (to je taka,
-	 * kde je parent NULL)
-	 * 
-	 * parsuje tak, ze najskor zozerie vsetky whitespaces z aktualneho stringu
-	 * (ten je tiez ako parameter), potom ziska dalsi token, potom ziska matches
-	 * pre dany token (subnods, commands, values osobitne). Ak je sucet matches
-	 * presne 1, moze ist dalej. Ak je sucet 0, to znamena, ze je to nejaka
-	 * blbost a vrati chybu (neparsovatelny vstup). Ak je matches viac, vrati
-	 * ich pocet (resp. navratovu hodnotu multiple matches).
-	 * Ak je taka poziadavka, pri parsovani vola callback funkciu, ktora ma
-	 * ako parameter postupne vsetky matches pre dany node.
-	 * Ak je to poziadavka, pri parsovani tiez volat setter/getter funkcie
-	 * (pre hodnoty) alebo exec funkcie (pre prikazy)
-	 */
-	
-}
-
-
-int32_t treecli_matches() {
-	/* hlada vsetky matches pre specifikovany node (staticke ak dynamicke)
-	 */
-	
-}
