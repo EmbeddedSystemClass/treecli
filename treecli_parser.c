@@ -27,27 +27,30 @@ int32_t treecli_print_tree(const struct treecli_node *top, int32_t indent) {
 }
 
 
-int32_t treecli_parser_pos_print(const struct treecli_parser_pos *pos) {
-	assert(pos != NULL);
+int32_t treecli_parser_pos_print(const struct treecli_parser *parser) {
+	assert(parser != NULL);
+	if (parser->print_handler == NULL) {
+		return TREECLI_PARSER_POS_PRINT_FAILED;
+	}
 	
-	printf("/");
-	for (uint32_t i = 0; i < pos->depth; i++) {
+	parser->print_handler("/", parser->print_handler_ctx);
+	for (uint32_t i = 0; i < parser->pos.depth; i++) {
 		if (i > 0) {
-			printf("/");
+			parser->print_handler("/", parser->print_handler_ctx);
 		}
-		if (pos->levels[i].node != NULL) {
-			printf("%s", pos->levels[i].node->name);
+		if (parser->pos.levels[i].node != NULL) {
+			parser->print_handler(parser->pos.levels[i].node->name, parser->print_handler_ctx);
 			continue;
 		}
-		if (pos->levels[i].dnode != NULL) {
-			printf("<dnode>");
+		if (parser->pos.levels[i].dnode != NULL) {
+			parser->print_handler("<dnode>", parser->print_handler_ctx);
 			continue;
 		}
 		/* shouldn't go here, either node or dnode must not be NULL */
 		assert(0);
 	}
 
-	return TREECLI_PRINT_POS_OK;
+	return TREECLI_PARSER_POS_PRINT_OK;
 }
 
 
@@ -191,7 +194,6 @@ int32_t treecli_parser_parse_line(struct treecli_parser *parser, const char *lin
 					return TREECLI_PARSER_PARSE_LINE_CANNOT_MOVE;
 				}
 				last_match_subnode = 1;
-				printf("going to top\n");
 			}
 
 			if (ret == TREECLI_PARSER_GET_MATCHES_UP) {
@@ -200,7 +202,6 @@ int32_t treecli_parser_parse_line(struct treecli_parser *parser, const char *lin
 					return TREECLI_PARSER_PARSE_LINE_CANNOT_MOVE;
 				}
 				last_match_subnode = 1;
-				printf("going up\n");
 			}
 
 			if (ret == TREECLI_PARSER_GET_MATCHES_SUBNODE) {
@@ -209,11 +210,9 @@ int32_t treecli_parser_parse_line(struct treecli_parser *parser, const char *lin
 					return TREECLI_PARSER_PARSE_LINE_CANNOT_MOVE;
 				}
 				last_match_subnode = 1;
-				printf("going to subnode %s\n", matches.subnode->name);
 			}
 
 			if (ret == TREECLI_PARSER_GET_MATCHES_COMMAND) {
-				printf("command %s matched\n", matches.command->name);
 				if (parser->allow_exec) {
 					if (matches.command->exec != NULL) {
 						matches.command->exec(parser, matches.command->exec_context);
@@ -222,7 +221,6 @@ int32_t treecli_parser_parse_line(struct treecli_parser *parser, const char *lin
 			}
 
 			if (ret == TREECLI_PARSER_GET_MATCHES_VALUE) {
-				printf("value %s matched\n", matches.value->name);
 				/* TODO: get operation */
 				/* TODO: get literal */
 			}
@@ -236,7 +234,6 @@ int32_t treecli_parser_parse_line(struct treecli_parser *parser, const char *lin
 	 * back. */
 	
 	if (last_match_subnode == 0) {
-		printf("resetting parsing position\n");
 		treecli_parser_pos_copy(&(parser->pos), &parser_pos_saved);
 	}
 	return TREECLI_PARSER_PARSE_LINE_OK;

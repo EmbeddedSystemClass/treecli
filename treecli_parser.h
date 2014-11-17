@@ -117,15 +117,6 @@ struct treecli_parser {
 	int allow_exec;
 };
 
-
-
-
-struct treecli_context {
-	
-	
-	
-};
-
 struct treecli_matches {
 	uint32_t count;
 	const struct treecli_node *subnode;
@@ -144,9 +135,9 @@ int32_t treecli_print_tree(const struct treecli_node *top, int32_t indent);
 #define TREECLI_PRINT_TREE_OK 0
 #define TREECLI_PRINT_TREE_FAILED -1
 
-int32_t treecli_parser_pos_print(const struct treecli_parser_pos *pos);
-#define TREECLI_PRINT_POS_OK 0
-#define TREECLI_PRINT_POS_FAILED -1
+int32_t treecli_parser_pos_print(const struct treecli_parser *parser);
+#define TREECLI_PARSER_POS_PRINT_OK 0
+#define TREECLI_PARSER_POS_PRINT_FAILED -1
 
 int32_t treecli_token_get(struct treecli_parser *parser, char **pos, char **token, uint32_t *len);
 #define TREECLI_TOKEN_GET_OK 0

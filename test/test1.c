@@ -2,7 +2,8 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "treecli.h"
+#include "treecli_parser.h"
+#include "treecli_shell.h"
 #include "treecli_tests.h"
 #include "lineedit.h"
 
@@ -62,11 +63,6 @@ int32_t parser_output(const char *s, void *ctx) {
 	return 0;
 }
 
-int32_t prompt(struct lineedit *le, void *ctx) {
-	treecli_parser_pos_print(&(((struct treecli_parser *)ctx)->pos));
-	
-	le->print_handler(" > ", le->print_handler_ctx);
-}
 
 
 int main(int argc, char *argv[]) {
@@ -74,38 +70,16 @@ int main(int argc, char *argv[]) {
 	//~ treecli_print_tree(&test1, 0);
 	//~ treecli_run_tests();
 	
-	struct treecli_parser parser;
-	treecli_parser_init(&parser, &test1);
-	treecli_parser_set_print_handler(&parser, parser_output, NULL);
-	parser.allow_exec = 1;
-	treecli_parser_parse_line(&parser, "in");
-
-	struct lineedit line;
-	
-	lineedit_init(&line, 200);
-	lineedit_set_print_handler(&line, parser_output, NULL);
-	lineedit_set_prompt_callback(&line, prompt, (void *)&parser);
-
-	lineedit_set_line(&line, "abcd");
-	lineedit_set_cursor(&line, 2);
-	lineedit_insert(&line, "tttt");
-	lineedit_refresh(&line);
+	struct treecli_shell sh;
+	treecli_shell_init(&sh, &test1);
+	treecli_shell_set_print_handler(&sh, parser_output, (void *)&sh);
 
 	while (!feof(stdin)) {
 		int c = fgetc(stdin);
 		
-		int32_t ret = lineedit_keypress(&line, c);
-		
-		if (ret == LINEEDIT_ENTER) {
-			break;
-		}
+		int32_t ret = treecli_shell_keypress(&sh, c);
 	}
 	
-	char *text;
-	lineedit_get_line(&line, &text);
-	printf("\n\nline='%s'\n", text);
-
-	lineedit_free(&line);
-	treecli_parser_free(&parser);
+	treecli_shell_free(&sh);
 }
 
