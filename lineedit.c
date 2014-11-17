@@ -61,6 +61,7 @@ int32_t lineedit_init(struct lineedit *le, uint32_t line_len) {
 	le->cursor = 0;
 	le->text[0] = 0;
 	le->pwchar = '\0';
+	le->csi_escape_mod = 0;
 	le->print_handler = NULL;
 	le->print_handler_ctx = NULL;
 	le->prompt_callback = NULL;
@@ -83,6 +84,11 @@ int32_t lineedit_keypress(struct lineedit *le, int c) {
 	assert(le != NULL);
 	assert(le->print_handler != NULL);
 
+	/* check for TAB */
+	if (c == 0x09) {
+		return LINEEDIT_TAB;
+	}
+
 	/* check for line feed */
 	if (c == 0x0a || c == 0x0b || c == 0x0c || c == 0x0d) {
 		return LINEEDIT_ENTER;
@@ -100,8 +106,10 @@ int32_t lineedit_keypress(struct lineedit *le, int c) {
 		return LINEEDIT_OK;
 	}
 
-	/* check for DEL */
+	/* check for DEL (backspace) */
 	if (c == 0x7f) {
+		/* Do not check return value, if we are unable to do backspace,
+		 * we just ignore it. */
 		lineedit_backspace(le);
 		return LINEEDIT_OK;
 	}
@@ -109,12 +117,14 @@ int32_t lineedit_keypress(struct lineedit *le, int c) {
 	/* check for CSI */
 	if (c == 0x9b) {
 		le->escape = ESC_CSI;
+		le->csi_escape_mod = 0;
 		return LINEEDIT_OK;
 	}
 
 	/* if ESC is set and '[' character was received, start CSI sequence */
 	if (le->escape == ESC_ESC && c == '[') {
 		le->escape = ESC_CSI;
+		le->csi_escape_mod = 0;
 		return LINEEDIT_OK;
 	}
 
@@ -126,6 +136,20 @@ int32_t lineedit_keypress(struct lineedit *le, int c) {
 
 	/* if CSI is set, try to read first alphanumeric character (parameters are ignored */
 	if (le->escape == ESC_CSI) {
+		/* Escape modifier, we continue with CSI escape flag set. */
+		if (c >= '0' && c <= '9') {
+			le->csi_escape_mod = le->csi_escape_mod * 10 + (c - '0');
+			return LINEEDIT_OK;
+		}
+
+		if (c == 'A') {
+			/* Move cursor up (previous history entry). */
+			/* TODO: */
+		}
+		if (c == 'B') {
+			/* Move cursor down (next history entry). */
+			/* TODO: */
+		}
 		if (c == 'C') {
 			/* move cursor right */
 			if (le->cursor < (strlen(le->text))) {
@@ -139,6 +163,10 @@ int32_t lineedit_keypress(struct lineedit *le, int c) {
 				le->cursor--;
 				lineedit_escape_print(le, ESC_CURSOR_LEFT, 1);
 			}
+		}
+		if (c == '~') {
+			/* Delete key. */
+			lineedit_backspace(le);
 		}
 
 		le->escape = ESC_NONE;
@@ -373,3 +401,21 @@ int32_t lineedit_clear(struct lineedit *le) {
 	
 	return LINEEDIT_CLEAR_OK;
 }
+
+
+/* TODO: add text length check */
+int32_t lineedit_insert(struct lineedit *le, const char *text) {
+	assert(le != NULL);
+	assert(text != NULL);
+
+	while (*text) {
+		lineedit_insert_char(le, *text);
+		text++;
+	}
+
+	return LINEEDIT_INSERT_OK;
+}
+
+
+
+

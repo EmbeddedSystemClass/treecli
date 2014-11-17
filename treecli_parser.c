@@ -4,7 +4,7 @@
 #include <assert.h>
 #include <string.h>
 
-#include "treecli.h"
+#include "treecli_parser.h"
 
 
 int32_t treecli_print_tree(const struct treecli_node *top, int32_t indent) {

@@ -87,8 +87,8 @@ int main(int argc, char *argv[]) {
 	lineedit_set_prompt_callback(&line, prompt, (void *)&parser);
 
 	lineedit_set_line(&line, "abcd");
-	lineedit_set_cursor(&line, 4);
-	lineedit_clear(&line);
+	lineedit_set_cursor(&line, 2);
+	lineedit_insert(&line, "tttt");
 	lineedit_refresh(&line);
 
 	while (!feof(stdin)) {

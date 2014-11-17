@@ -10,6 +10,7 @@ struct lineedit {
 	char *text;
 	uint32_t len;
 	enum lineedit_escape escape;
+	uint32_t csi_escape_mod;
 	char pwchar;
 	
 	int32_t (*print_handler)(const char *line, void *ctx);
@@ -50,6 +51,7 @@ int32_t lineedit_free(struct lineedit *le);
 int32_t lineedit_keypress(struct lineedit *le, int c);
 #define LINEEDIT_OK 0
 #define LINEEDIT_ENTER -1
+#define LINEEDIT_TAB -2
 
 int32_t lineedit_backspace(struct lineedit *le);
 #define LINEEDIT_BACKSPACE_OK 0
@@ -90,6 +92,10 @@ int32_t lineedit_set_line(struct lineedit *le, const char *text);
 int32_t lineedit_clear(struct lineedit *le);
 #define LINEEDIT_CLEAR_OK 0
 #define LINEEDIT_CLEAR_FAILED -1
+
+int32_t lineedit_insert(struct lineedit *le, const char *text);
+#define LINEEDIT_INSERT_OK 0
+#define LINEEDIT_INSERT_FAILED -1
 
 
 
