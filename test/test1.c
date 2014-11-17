@@ -8,6 +8,8 @@
 #include "lineedit.h"
 
 
+uint32_t quit_req = 0;
+
 /**
  * Configured values
  */
@@ -22,6 +24,11 @@ uint32_t test_value;
 int32_t test1_interface_print_exec(struct treecli_parser *parser, void *exec_context) {
 	printf("nieco, ctx = %d\n", exec_context);
 };
+
+int32_t test1_system_quit_exec(struct treecli_parser *parser, void *exec_context) {
+	quit_req = 1;
+};
+
 
 const struct treecli_command test1_interface_print = {
 	.name = "print",
@@ -38,6 +45,13 @@ const struct treecli_value test1_interface_enabled = {
 	.next = NULL
 };
 
+const struct treecli_command test1_system_quit = {
+	.name = "quit",
+	.help = "Exit the whole thing",
+	.exec = test1_system_quit_exec,
+	.next = NULL
+};
+
 const struct treecli_node test1_interface = {
 	.name = "interface",
 	.values = &test1_interface_enabled,
@@ -47,6 +61,8 @@ const struct treecli_node test1_interface = {
 
 const struct treecli_node test1_system = {
 	.name = "system",
+	.help = "Various commands for system management",
+	.commands = &test1_system_quit,
 	.next = &test1_interface
 };
 
@@ -78,6 +94,10 @@ int main(int argc, char *argv[]) {
 		int c = fgetc(stdin);
 		
 		int32_t ret = treecli_shell_keypress(&sh, c);
+		
+		if (quit_req) {
+			break;
+		}
 	}
 	
 	treecli_shell_free(&sh);

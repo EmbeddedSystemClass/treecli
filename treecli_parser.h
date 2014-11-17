@@ -32,6 +32,7 @@ struct treecli_command {
 	 * function pointer to execute the command
 	 */
 	const char *name;
+	const char *help;
 	const struct treecli_command *next;
 
 	int32_t (*exec)(struct treecli_parser *parser, void *exec_context);
@@ -40,6 +41,7 @@ struct treecli_command {
 
 struct treecli_value {
 	const char *name;
+	const char *help;
 
 	/* Pointer to variable with actual value. Optional, could be ommited
 	 * (value getter/setter can be used instead). If neither one is specified,
@@ -71,6 +73,7 @@ struct treecli_node {
 	 */
 	
 	const char *name;
+	const char *help;
 	
 	const struct treecli_node *subnodes;
 	const struct treecli_dnode *dsubnodes;
@@ -165,6 +168,7 @@ int32_t treecli_parser_set_print_handler(struct treecli_parser *parser, int32_t 
 #define TREECLI_PARSER_SET_PRINT_HANDLER_FAILED -1
 
 int32_t treecli_parser_get_matches(struct treecli_parser *parser, char *token, uint32_t len, struct treecli_matches *matches);
+#define TREECLI_PARSER_GET_MATCHES_HELP 5
 #define TREECLI_PARSER_GET_MATCHES_SUBNODE 4
 #define TREECLI_PARSER_GET_MATCHES_VALUE 3
 #define TREECLI_PARSER_GET_MATCHES_COMMAND 2
@@ -198,6 +202,12 @@ int32_t treecli_parser_get_current_node(struct treecli_parser_pos *pos, struct t
 #define TREECLI_PARSER_GET_CURRENT_NODE_OK 0
 #define TREECLI_PARSER_GET_CURRENT_NODE_ROOT -1
 #define TREECLI_PARSER_GET_CURRENT_NODE_FAILED -2
+
+int32_t treecli_parser_help(struct treecli_parser *parser);
+#define TREECLI_PARSER_HELP_OK 0
+#define TREECLI_PARSER_HELP_FAILED -1
+
+
 
 
 #endif

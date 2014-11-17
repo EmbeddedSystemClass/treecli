@@ -44,12 +44,7 @@ int32_t treecli_shell_print_parser_result(struct treecli_shell *sh, int32_t res)
 int32_t treecli_shell_keypress(struct treecli_shell *sh, int c);
 #define TREECLI_SHELL_KEYPRESS_OK 0
 #define TREECLI_SHELL_KEYPRESS_FAILED -1
-
-
-
-
-
-
+#define TREECLI_SHELL_KEYPRESS_QUIT -2
 
 
 

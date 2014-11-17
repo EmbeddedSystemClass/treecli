@@ -25,7 +25,6 @@ int32_t treecli_shell_init(struct treecli_shell *sh, const struct treecli_node *
 	lineedit_init(&(sh->line), TREECLI_SHELL_LINE_LEN);
 	lineedit_set_print_handler(&(sh->line), treecli_shell_print_handler, (void *)sh);
 	lineedit_set_prompt_callback(&(sh->line), treecli_shell_prompt_callback, (void *)sh);
-	lineedit_set_line(&(sh->line), "abcd");
 
 	return TREECLI_SHELL_INIT_OK;
 }
@@ -93,7 +92,10 @@ int32_t treecli_shell_print_parser_result(struct treecli_shell *sh, int32_t res)
 		/* Everything went good, do not print anything, just move on. */
 		return TREECLI_SHELL_PRINT_PARSER_RESULT_OK;
 	} else {
-		/* Error occured, print error position. */
+		/* Error occured, print error position.
+		 * TODO: shift depending on prompt length*/
+		lineedit_escape_print(&(sh->line), ESC_COLOR, 31);
+		lineedit_escape_print(&(sh->line), ESC_BOLD, 0);
 		for (uint32_t i = 0; i < sh->parser.error_pos; i++) {
 			sh->print_handler("-", sh->print_handler_ctx);
 		}
@@ -101,20 +103,19 @@ int32_t treecli_shell_print_parser_result(struct treecli_shell *sh, int32_t res)
 		
 		if (res == TREECLI_PARSER_PARSE_LINE_FAILED) {
 			sh->print_handler("error: command parsing failed\n", sh->print_handler_ctx);
-			return TREECLI_SHELL_PRINT_PARSER_RESULT_OK;
 		}
 		if (res == TREECLI_PARSER_PARSE_LINE_MULTIPLE_MATCHES) {
 			sh->print_handler("error: multiple matches\n", sh->print_handler_ctx);
-			return TREECLI_SHELL_PRINT_PARSER_RESULT_OK;
 		}
 		if (res == TREECLI_PARSER_PARSE_LINE_NO_MATCHES) {
 			sh->print_handler("error: no match\n", sh->print_handler_ctx);
-			return TREECLI_SHELL_PRINT_PARSER_RESULT_OK;
 		}
 		if (res == TREECLI_PARSER_PARSE_LINE_CANNOT_MOVE) {
 			sh->print_handler("error: cannot change working position\n", sh->print_handler_ctx);
-			return TREECLI_SHELL_PRINT_PARSER_RESULT_OK;
 		}
+		lineedit_escape_print(&(sh->line), ESC_DEFAULT, 0);
+		return TREECLI_SHELL_PRINT_PARSER_RESULT_OK;
+
 	}
 	
 	return TREECLI_SHELL_PRINT_PARSER_RESULT_FAILED;
@@ -139,9 +140,8 @@ int32_t treecli_shell_keypress(struct treecli_shell *sh, int c) {
 		lineedit_get_line(&(sh->line), &cmd);
 		int32_t parser_ret = treecli_parser_parse_line(&(sh->parser), cmd);
 
-		
+		/* Print parsing results and prepare lineedit for new command. */
 		treecli_shell_print_parser_result(sh, parser_ret);
-
 		lineedit_clear(&(sh->line));
 		lineedit_refresh(&(sh->line));
 		
@@ -157,4 +157,7 @@ int32_t treecli_shell_keypress(struct treecli_shell *sh, int c) {
 
 	return TREECLI_SHELL_KEYPRESS_OK;
 }
+
+
+
 
