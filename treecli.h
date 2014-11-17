@@ -13,6 +13,7 @@
 
 struct treecli_parser;
 struct treecli_parser_pos;
+struct treecli_parser_pos_level;
 
 /**
  * Dnode specifies how are node childs generated during runtime. It can be used
@@ -83,25 +84,13 @@ struct treecli_node {
 
 
 
-struct treecli_parser {
-	const struct treecli_node *top;
-	
-	int32_t (*print_handler)(char *line, void *ctx);
-	void *print_handler_ctx;
-	
-	uint32_t error_pos;
-	
-	int allow_exec;
-};
-
-
 /**
  * One level in hierarchical tree structure can be described by a statically
  * initialized node or dynamically created node (dnode specification and its index).
  */
 struct treecli_parser_pos_level {
-	const struct treecli_node node;
-	const struct treecli_node dnode;
+	const struct treecli_node *node;
+	const struct treecli_node *dnode;
 	uint32_t dnode_index;
 };
 
@@ -114,6 +103,21 @@ struct treecli_parser_pos {
 	struct treecli_parser_pos_level levels[TREECLI_TREE_MAX_DEPTH];
 	uint32_t depth;
 };
+
+
+struct treecli_parser {
+	const struct treecli_node *top;
+	struct treecli_parser_pos pos;
+	
+	int32_t (*print_handler)(const char *line, void *ctx);
+	void *print_handler_ctx;
+	
+	uint32_t error_pos;
+	
+	int allow_exec;
+};
+
+
 
 
 struct treecli_context {
@@ -140,12 +144,15 @@ int32_t treecli_print_tree(const struct treecli_node *top, int32_t indent);
 #define TREECLI_PRINT_TREE_OK 0
 #define TREECLI_PRINT_TREE_FAILED -1
 
+int32_t treecli_parser_pos_print(const struct treecli_parser_pos *pos);
+#define TREECLI_PRINT_POS_OK 0
+#define TREECLI_PRINT_POS_FAILED -1
+
 int32_t treecli_token_get(struct treecli_parser *parser, char **pos, char **token, uint32_t *len);
 #define TREECLI_TOKEN_GET_OK 0
 #define TREECLI_TOKEN_GET_FAILED -1
 #define TREECLI_TOKEN_GET_NONE -2
 #define TREECLI_TOKEN_GET_UNEXPECTED -3
-
 
 int32_t treecli_parser_init(struct treecli_parser *parser, const struct treecli_node *top);
 #define TREECLI_PARSER_INIT_OK 0
@@ -160,12 +167,13 @@ int32_t treecli_parser_parse_line(struct treecli_parser *parser, const char *lin
 #define TREECLI_PARSER_PARSE_LINE_FAILED -1
 #define TREECLI_PARSER_PARSE_LINE_NO_MATCHES -2
 #define TREECLI_PARSER_PARSE_LINE_MULTIPLE_MATCHES -3
+#define TREECLI_PARSER_PARSE_LINE_CANNOT_MOVE -4
 
-int32_t treecli_parser_set_print_handler(struct treecli_parser *parser, int32_t (*print_handler)(char *line, void *ctx), void *ctx);
+int32_t treecli_parser_set_print_handler(struct treecli_parser *parser, int32_t (*print_handler)(const char *line, void *ctx), void *ctx);
 #define TREECLI_PARSER_SET_PRINT_HANDLER_OK 0
 #define TREECLI_PARSER_SET_PRINT_HANDLER_FAILED -1
 
-int32_t treecli_parser_get_matches(struct treecli_parser *parser, const struct treecli_node *node, char *token, uint32_t len, struct treecli_matches *matches);
+int32_t treecli_parser_get_matches(struct treecli_parser *parser, char *token, uint32_t len, struct treecli_matches *matches);
 #define TREECLI_PARSER_GET_MATCHES_SUBNODE 4
 #define TREECLI_PARSER_GET_MATCHES_VALUE 3
 #define TREECLI_PARSER_GET_MATCHES_COMMAND 2
@@ -175,6 +183,30 @@ int32_t treecli_parser_get_matches(struct treecli_parser *parser, const struct t
 #define TREECLI_PARSER_GET_MATCHES_MULTIPLE -2
 #define TREECLI_PARSER_GET_MATCHES_NONE -3
 
+int32_t treecli_parser_pos_move(struct treecli_parser_pos *pos, struct treecli_parser_pos_level *level);
+#define TREECLI_PARSER_POS_MOVE_OK 0
+#define TREECLI_PARSER_POS_MOVE_FAILED -1
+
+int32_t treecli_parser_pos_up(struct treecli_parser_pos *pos);
+#define TREECLI_PARSER_POS_UP_OK 0
+#define TREECLI_PARSER_POS_UP_FAILED -1
+
+int32_t treecli_parser_pos_root(struct treecli_parser_pos *pos);
+#define TREECLI_PARSER_POS_ROOT_OK 0
+#define TREECLI_PARSER_POS_ROOT_FAILED -1
+
+int32_t treecli_parser_pos_copy(struct treecli_parser_pos *pos, struct treecli_parser_pos *src);
+#define TREECLI_PARSER_POS_COPY_OK 0
+#define TREECLI_PARSER_POS_COPY_FAILED -1
+
+int32_t treecli_parser_pos_init(struct treecli_parser_pos *pos);
+#define TREECLI_PARSER_POS_INIT_OK 0
+#define TREECLI_PARSER_POS_INIT_FAILED -1
+
+int32_t treecli_parser_get_current_node(struct treecli_parser_pos *pos, struct treecli_node *node);
+#define TREECLI_PARSER_GET_CURRENT_NODE_OK 0
+#define TREECLI_PARSER_GET_CURRENT_NODE_ROOT -1
+#define TREECLI_PARSER_GET_CURRENT_NODE_FAILED -2
 
 
 #endif

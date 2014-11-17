@@ -23,10 +23,7 @@ static int test_treecli_token_get(void) {
 	
 	if (treecli_token_get(NULL, &line1, &token, &len) != TREECLI_TOKEN_GET_NONE) return 0;
 
-
-
 	char *line2 = "  fiRSt \t  tok3n test ";
-
 
 	return 1;
 }
