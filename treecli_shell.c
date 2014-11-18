@@ -13,21 +13,37 @@
 int32_t treecli_shell_init(struct treecli_shell *sh, const struct treecli_node *top) {
 	assert(sh != NULL);
 
+	/* initialize member variables */
 	sh->print_handler = NULL;
 	sh->print_handler_ctx = NULL;
 	sh->autocomplete = 0;
+	sh->autocomplete_at = 0;
 
 	/* initialize embedded command parser */
-	treecli_parser_init(&(sh->parser), top);
-	treecli_parser_set_print_handler(&(sh->parser), treecli_shell_print_handler, (void *)sh);
-	treecli_parser_set_match_handler(&(sh->parser), treecli_shell_match_handler, (void *)sh);
-	treecli_parser_set_best_match_handler(&(sh->parser), treecli_shell_best_match_handler, (void *)sh);
+	if (treecli_parser_init(&(sh->parser), top) != TREECLI_PARSER_INIT_OK) {
+		return TREECLI_SHELL_INIT_FAILED;
+	}
+	if (treecli_parser_set_print_handler(&(sh->parser), treecli_shell_print_handler, (void *)sh) != TREECLI_PARSER_SET_PRINT_HANDLER_OK) {
+		return TREECLI_SHELL_INIT_FAILED;
+	}
+	if (treecli_parser_set_match_handler(&(sh->parser), treecli_shell_match_handler, (void *)sh) != TREECLI_PARSER_SET_MATCH_HANDLER_OK) {
+		return TREECLI_SHELL_INIT_FAILED;
+	}
+	if (treecli_parser_set_best_match_handler(&(sh->parser), treecli_shell_best_match_handler, (void *)sh) != TREECLI_PARSER_SET_BEST_MATCH_HANDLER_OK) {
+		return TREECLI_SHELL_INIT_FAILED;
+	}
 	sh->parser.allow_exec = 1;
 
 	/* initialize line editing library */
-	lineedit_init(&(sh->line), TREECLI_SHELL_LINE_LEN);
-	lineedit_set_print_handler(&(sh->line), treecli_shell_print_handler, (void *)sh);
-	lineedit_set_prompt_callback(&(sh->line), treecli_shell_prompt_callback, (void *)sh);
+	if (lineedit_init(&(sh->line), TREECLI_SHELL_LINE_LEN) != LINEEDIT_INIT_OK) {
+		return TREECLI_SHELL_INIT_FAILED;
+	}
+	if (lineedit_set_print_handler(&(sh->line), treecli_shell_print_handler, (void *)sh) != LINEEDIT_SET_PRINT_HANDLER_OK) {
+		return TREECLI_SHELL_INIT_FAILED;
+	}
+	if (lineedit_set_prompt_callback(&(sh->line), treecli_shell_prompt_callback, (void *)sh) != LINEEDIT_SET_PROMPT_CALLBACK_OK) {
+		return TREECLI_SHELL_INIT_FAILED;
+	}
 
 	return TREECLI_SHELL_INIT_OK;
 }
@@ -35,10 +51,18 @@ int32_t treecli_shell_init(struct treecli_shell *sh, const struct treecli_node *
 
 int32_t treecli_shell_free(struct treecli_shell *sh) {
 	assert(sh != NULL);
-	treecli_parser_free(&(sh->parser));
-	lineedit_free(&(sh->line));
 
-	return TREECLI_SHELL_FREE_OK;
+	/* Do not return if failed, do our best to free as much as possible. */
+	int32_t ret = TREECLI_SHELL_FREE_OK;
+
+	if (treecli_parser_free(&(sh->parser)) != TREECLI_PARSER_FREE_OK) {
+		ret = TREECLI_SHELL_FREE_FAILED;
+	}
+	if (lineedit_free(&(sh->line)) != LINEEDIT_FREE_OK) {
+		ret = TREECLI_SHELL_FREE_FAILED;
+	}
+
+	return ret;
 }
 
 
@@ -49,7 +73,11 @@ int32_t treecli_shell_set_print_handler(struct treecli_shell *sh, int32_t (*prin
 	sh->print_handler = print_handler;
 	sh->print_handler_ctx = ctx;
 
-	lineedit_refresh(&(sh->line));
+	/* Current line with command prompt is displayed when print handler is made
+	 * available. If we cannot refresh actually edited line, something is wrong. */
+	if (lineedit_refresh(&(sh->line)) != LINEEDIT_REFRESH_OK) {
+		return TREECLI_SHELL_SET_PRINT_HANDLER_FAILED;
+	}
 
 	return TREECLI_SHELL_SET_PRINT_HANDLER_OK;
 }
