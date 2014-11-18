@@ -61,6 +61,7 @@ int32_t lineedit_init(struct lineedit *le, uint32_t line_len) {
 	le->cursor = 0;
 	le->text[0] = 0;
 	le->pwchar = '\0';
+	le->prompt_len = 0;
 	le->csi_escape_mod = 0;
 	le->print_handler = NULL;
 	le->print_handler_ctx = NULL;
@@ -311,7 +312,11 @@ int32_t lineedit_refresh(struct lineedit *le) {
 	lineedit_escape_print(le, ESC_BOLD, 0);
 
 	if (le->prompt_callback != NULL) {
-		le->prompt_callback(le, le->prompt_callback_ctx);
+		le->prompt_len = le->prompt_callback(le, le->prompt_callback_ctx);
+		/* negative number returned, error occured */
+		if (le->prompt_len < 0) {
+			le->prompt_len = 0;
+		}
 	}
 
 	lineedit_escape_print(le, ESC_DEFAULT, 0);

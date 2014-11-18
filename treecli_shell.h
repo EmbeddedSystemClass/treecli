@@ -17,6 +17,8 @@ struct treecli_shell {
 	int32_t (*print_handler)(const char *line, void *ctx);
 	void *print_handler_ctx;
 
+	uint32_t autocomplete;
+	uint32_t autocomplete_at;
 };
 
 
@@ -36,6 +38,8 @@ int32_t treecli_shell_set_print_handler(struct treecli_shell *sh, int32_t (*prin
 
 int32_t treecli_shell_prompt_callback(struct lineedit *le, void *ctx);
 int32_t treecli_shell_print_handler(const char *line, void *ctx);
+int32_t treecli_shell_match_handler(const char *token, void *ctx);
+int32_t treecli_shell_best_match_handler(const char *token, uint32_t token_len, uint32_t match_pos, uint32_t match_len, void *ctx);
 
 int32_t treecli_shell_print_parser_result(struct treecli_shell *sh, int32_t res);
 #define TREECLI_SHELL_PRINT_PARSER_RESULT_OK 0

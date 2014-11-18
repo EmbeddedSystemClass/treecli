@@ -18,6 +18,7 @@ struct lineedit {
 	
 	int32_t (*prompt_callback)(struct lineedit *le, void *ctx);
 	void *prompt_callback_ctx;
+	uint32_t prompt_len;
 };
 
 enum lineedit_escape_seq {
