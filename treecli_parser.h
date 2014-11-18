@@ -1,3 +1,27 @@
+/**
+ * Copyright (c) 2014, Marek Koza (qyx@krtko.org)
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
 
 #ifndef _TREECLI_PARSER_H_
@@ -32,13 +56,13 @@ struct treecli_parser_pos_level;
  * compile time (for example - network interfaces).
  */
 struct treecli_dnode {
-	
+
 	const struct treecli_dnode *next;
 };
 
 
 struct treecli_command {
-	
+
 	/* TODO:
 	 * function pointer to execute the command
 	 */
@@ -58,14 +82,14 @@ struct treecli_value {
 	 * (value getter/setter can be used instead). If neither one is specified,
 	 * value always reads as (uint32)0, write has ho effect */
 	void *value;
-	
+
 	/* Value assigned after initialization. It has no effect if value getter
 	 * is valid. */
 	void *default_value;
-	
+
 	/* Type of value or value getter/setter */
 	int value_type;
-	
+
 	/* TODO: value getter/setter functions */
 	/* TODO: value boundaries */
 	/* TODO: valid values enum/iterator */
@@ -82,15 +106,15 @@ struct treecli_value {
 struct treecli_node {
 	/* TODO:
 	 */
-	
+
 	const char *name;
 	const char *help;
-	
+
 	const struct treecli_node *subnodes;
 	const struct treecli_dnode *dsubnodes;
 	const struct treecli_command *commands;
 	const struct treecli_value *values;
-	
+
 	const struct treecli_node *next;
 };
 
@@ -122,7 +146,7 @@ struct treecli_parser_pos {
 struct treecli_parser {
 	const struct treecli_node *top;
 	struct treecli_parser_pos pos;
-	
+
 	int32_t (*print_handler)(const char *line, void *ctx);
 	void *print_handler_ctx;
 
@@ -131,7 +155,7 @@ struct treecli_parser {
 
 	int32_t (*best_match_handler)(const char *token, uint32_t token_len, uint32_t match_pos, uint32_t match_len, void *ctx);
 	void *best_match_handler_ctx;
-	
+
 	uint32_t error_pos;
 	uint32_t error_len;
 
@@ -147,7 +171,7 @@ struct treecli_matches {
 	const struct treecli_dnode *dsubnode;
 	const struct treecli_command *command;
 	const struct treecli_value *value;
-	
+
 	const char *best_match_pos;
 	uint32_t best_match_len;
 };
