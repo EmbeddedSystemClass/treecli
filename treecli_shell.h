@@ -9,6 +9,17 @@
 #define TREECLI_SHELL_LINE_LEN 200
 #endif
 
+#ifndef TREECLI_SHELL_DEFAULT_HOSTNAME
+#define TREECLI_SHELL_DEFAULT_HOSTNAME "cli"
+#endif
+
+#ifndef TREECLI_SHELL_DEFAULT_PROMPT_COLOR
+#define TREECLI_SHELL_DEFAULT_PROMPT_COLOR LINEEDIT_FG_COLOR_GREEN
+#endif
+
+#ifndef TREECLI_SHELL_DEFAULT_ERROR_COLOR
+#define TREECLI_SHELL_DEFAULT_ERROR_COLOR LINEEDIT_FG_COLOR_RED
+#endif
 
 /**
  * Treecli shell structure holding single shell context. The structure shouldn't
@@ -43,8 +54,12 @@ struct treecli_shell {
 	 * position where autocompletion is requested. Autocompletion will be
 	 * performed on next parser call. Internal temporary variable.
 	 */
-	uint32_t autocomplete;
+	uint8_t autocomplete;
 	uint32_t autocomplete_at;
+
+	const char *hostname;
+	uint8_t prompt_color;
+	uint8_t error_color;
 };
 
 

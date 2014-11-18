@@ -1,6 +1,15 @@
 #ifndef _TERMINAL_H_
 #define _TERMINAL_H_
 
+#define LINEEDIT_FG_COLOR_BLACK 30
+#define LINEEDIT_FG_COLOR_RED 31
+#define LINEEDIT_FG_COLOR_GREEN 32
+#define LINEEDIT_FG_COLOR_YELLOW 33
+#define LINEEDIT_FG_COLOR_BLUE 34
+#define LINEEDIT_FG_COLOR_MAGENTA 35
+#define LINEEDIT_FG_COLOR_CYAN 36
+#define LINEEDIT_FG_COLOR_WHITE 37
+
 enum lineedit_escape {
 	ESC_NONE, ESC_ESC, ESC_CSI, ESC_OSC
 };
@@ -12,10 +21,10 @@ struct lineedit {
 	enum lineedit_escape escape;
 	uint32_t csi_escape_mod;
 	char pwchar;
-	
+
 	int32_t (*print_handler)(const char *line, void *ctx);
 	void *print_handler_ctx;
-	
+
 	int32_t (*prompt_callback)(struct lineedit *le, void *ctx);
 	void *prompt_callback_ctx;
 	uint32_t prompt_len;

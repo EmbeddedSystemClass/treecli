@@ -9,7 +9,6 @@
 #include "treecli_shell.h"
 
 
-
 int32_t treecli_shell_init(struct treecli_shell *sh, const struct treecli_node *top) {
 	assert(sh != NULL);
 
@@ -18,6 +17,9 @@ int32_t treecli_shell_init(struct treecli_shell *sh, const struct treecli_node *
 	sh->print_handler_ctx = NULL;
 	sh->autocomplete = 0;
 	sh->autocomplete_at = 0;
+	sh->hostname = TREECLI_SHELL_DEFAULT_HOSTNAME;
+	sh->prompt_color = TREECLI_SHELL_DEFAULT_PROMPT_COLOR;
+	sh->error_color = TREECLI_SHELL_DEFAULT_ERROR_COLOR;
 
 	/* initialize embedded command parser */
 	if (treecli_parser_init(&(sh->parser), top) != TREECLI_PARSER_INIT_OK) {
@@ -92,16 +94,33 @@ int32_t treecli_shell_prompt_callback(struct lineedit *le, void *ctx) {
 	struct treecli_shell *sh = (struct treecli_shell *)ctx;
 
 	if (sh->print_handler) {
-		sh->print_handler("cli ", sh->print_handler_ctx);
-		len += 4;
+		/* Use shell print handler to output command prompt. Prompt
+		 * length have to be returned back to line editor to let it know
+		 * where actual editing begins. */
+		/* TODO: system/host name should be printed instead */
+		lineedit_escape_print(le, ESC_COLOR, sh->prompt_color);
+		lineedit_escape_print(le, ESC_BOLD, 0);
+		sh->print_handler(sh->hostname, sh->print_handler_ctx);
+		sh->print_handler(" ", sh->print_handler_ctx);
+		len += 1 + strlen(sh->hostname);
 
+		lineedit_escape_print(le, ESC_DEFAULT, 0);
+		lineedit_escape_print(le, ESC_COLOR, sh->prompt_color);
+
+		/* print actual working position in the tree */
 		uint32_t ret = treecli_parser_pos_print(&(sh->parser));
 		if (ret > 0) {
 			len += ret;
 		}
 
+		lineedit_escape_print(le, ESC_BOLD, 0);
 		sh->print_handler(" > ", sh->print_handler_ctx);
+		lineedit_escape_print(le, ESC_DEFAULT, 0);
 		len += 3;
+
+	} else {
+		/* negative number should be returned if error occurs. */
+		return -1;
 	}
 
 	return len;
@@ -176,8 +195,8 @@ int32_t treecli_shell_print_parser_result(struct treecli_shell *sh, int32_t res)
 	} else {
 		/* Error occured, print error position.
 		 * TODO: shift depending on prompt length*/
-		lineedit_escape_print(&(sh->line), ESC_COLOR, 31);
-		lineedit_escape_print(&(sh->line), ESC_BOLD, 0);
+		lineedit_escape_print(&(sh->line), ESC_COLOR, sh->error_color);
+		//~ lineedit_escape_print(&(sh->line), ESC_BOLD, 0);
 		for (uint32_t i = 0; i < (sh->parser.error_pos + sh->line.prompt_len); i++) {
 			sh->print_handler("-", sh->print_handler_ctx);
 		}
@@ -252,13 +271,13 @@ int32_t treecli_shell_keypress(struct treecli_shell *sh, int c) {
 		sh->parser.allow_best_match = 0;
 
 		/* try to parse whole command with execution disabled to find out
-		 * position of umtiple matches */
+		 * position of multiple matches */
 		int32_t parser_ret = treecli_parser_parse_line(&(sh->parser), cmd);
 
 		if (parser_ret == TREECLI_PARSER_PARSE_LINE_MULTIPLE_MATCHES) {
 			if (cursor == (sh->parser.error_pos + sh->parser.error_len)) {
-				/* setup parser again and run it */
 
+				/* run parser again to display suggestions */
 				sh->parser.print_matches = 1;
 				sh->parser.allow_best_match = 0;
 				sh->parser.allow_suggestions = 0;
@@ -268,6 +287,8 @@ int32_t treecli_shell_keypress(struct treecli_shell *sh, int c) {
 
 				sh->print_handler("\r\n", sh->print_handler_ctx);
 
+				/* and run the parser for the third time to
+				 * possibly autocomplete suggested tokens */
 				sh->parser.print_matches = 1;
 				sh->parser.allow_best_match = 1;
 				sh->parser.allow_suggestions = 0;
@@ -279,27 +300,23 @@ int32_t treecli_shell_keypress(struct treecli_shell *sh, int c) {
 				treecli_shell_print_parser_result(sh, parser_ret);
 			}
 		} else if (parser_ret == TREECLI_PARSER_PARSE_LINE_OK) {
-			/* Check if we are on the end of the line. If yes, autocomplete
-			 * last token and suggest some more tokens */
-			//~ if (cursor == strlen(cmd)) {
 
-				sh->parser.print_matches = 0;
-				sh->parser.allow_best_match = 0;
-				sh->parser.allow_suggestions = 1;
-				sh->autocomplete = 0;
-				sh->autocomplete_at = cursor;
-				parser_ret = treecli_parser_parse_line(&(sh->parser), cmd);
+			sh->parser.print_matches = 0;
+			sh->parser.allow_best_match = 0;
+			sh->parser.allow_suggestions = 1;
+			sh->autocomplete = 0;
+			sh->autocomplete_at = cursor;
+			parser_ret = treecli_parser_parse_line(&(sh->parser), cmd);
 
-				sh->print_handler("\r\n", sh->print_handler_ctx);
+			sh->print_handler("\r\n", sh->print_handler_ctx);
 
-				sh->parser.print_matches = 0;
-				sh->parser.allow_best_match = 1;
-				sh->parser.allow_suggestions = 0;
-				sh->autocomplete = 1;
-				sh->autocomplete_at = cursor;
-				parser_ret = treecli_parser_parse_line(&(sh->parser), cmd);
+			sh->parser.print_matches = 0;
+			sh->parser.allow_best_match = 1;
+			sh->parser.allow_suggestions = 0;
+			sh->autocomplete = 1;
+			sh->autocomplete_at = cursor;
+			parser_ret = treecli_parser_parse_line(&(sh->parser), cmd);
 
-			//~ }
 		} else {
 			treecli_shell_print_parser_result(sh, parser_ret);
 		}
