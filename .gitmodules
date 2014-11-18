@@ -1,0 +1,3 @@
+[submodule "lineedit"]
+	path = lineedit
+	url = git@github.com:iqyx/lineedit.git

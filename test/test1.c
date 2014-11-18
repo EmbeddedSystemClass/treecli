@@ -165,21 +165,23 @@ int main(int argc, char *argv[]) {
 
 	//~ treecli_print_tree(&test1, 0);
 	//~ treecli_run_tests();
-	
+
+	//~ lineedit_init(NULL, 1);
+
 	struct treecli_shell sh;
 	treecli_shell_init(&sh, &test1);
 	treecli_shell_set_print_handler(&sh, parser_output, (void *)&sh);
 
 	while (!feof(stdin)) {
 		int c = fgetc(stdin);
-		
+
 		int32_t ret = treecli_shell_keypress(&sh, c);
-		
+
 		if (quit_req) {
 			break;
 		}
 	}
-	
+
 	treecli_shell_free(&sh);
 }
 

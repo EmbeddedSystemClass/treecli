@@ -172,10 +172,8 @@ int32_t treecli_shell_match_handler(const char *token, void *ctx) {
 
 	struct treecli_shell *sh = (struct treecli_shell *)ctx;
 
+	/* TODO: reaplace with print handler */
 	printf("%s ", token);
-
-	/* find out of we are right at the end of incomplete token. If yes and
-	 * autocompletion is enabled, autocomplete it */
 
 	return 0;
 }
