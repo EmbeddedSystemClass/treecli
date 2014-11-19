@@ -1,5 +1,5 @@
 #CDEBUGFLAGS=-fprofile-arcs -ftest-coverage -pg -g
-CFLAGS=-I . -I .. -O0 --std=c99  $(CDEBUGFLAGS)
+CFLAGS=-I . -I .. -I ../lineedit -O0 --std=c99  $(CDEBUGFLAGS)
 LDFLAGS=-O0  $(CDEBUGFLAGS)
 CC=gcc
 LD=gcc
@@ -11,7 +11,7 @@ all: test1
 treecli:
 	$(CC) $(CFLAGS) -c ../treecli_parser.c
 	$(CC) $(CFLAGS) -c ../treecli_shell.c
-	$(CC) $(CFLAGS) -c ../lineedit.c
+	$(CC) $(CFLAGS) -c ../lineedit/lineedit.c
 	$(CC) $(CFLAGS) -c ../treecli_tests.c
 
 test1: treecli
