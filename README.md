@@ -100,7 +100,7 @@ tree traversal actions behave differently depending on their position:
   working position is not changed and stays the same as before the line was parsed
 
 
-Examples
+Command line examples
 -----------------------------
 
 
@@ -141,6 +141,15 @@ Setting IP addresses on multiple interfaces:
 /interface/ethernet/ > /
 / >
 ```
+
+
+Usage
+-----------------------------
+
+See examples/example1.c file. Terminal needs to be in non-canonical mode for
+this example to work correctly. You can use run.sh script to set it using
+stty utility. Sample configuration tree can be found in conf_tree1.c file.
+
 
 Current status
 -----------------------------

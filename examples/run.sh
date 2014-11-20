@@ -1,7 +1,7 @@
 #!/bin/bash
 
 stty -icanon -echo
-./test1
+./example1
 stty icanon echo
 echo
 

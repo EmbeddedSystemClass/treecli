@@ -4,7 +4,6 @@
 
 #include "treecli_parser.h"
 #include "treecli_shell.h"
-#include "treecli_tests.h"
 #include "lineedit.h"
 
 
