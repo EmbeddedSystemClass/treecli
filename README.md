@@ -151,6 +151,24 @@ this example to work correctly. You can use run.sh script to set it using
 stty utility. Sample configuration tree can be found in conf_tree1.c file.
 
 
+A note on assertions
+-----------------------------
+
+Library uses custom assert macro to check input parameters. There are two kinds
+of them - those depending on user input/environment and it is perfectly valid
+if they are invalid, and those which depend on programmer and system sanity.
+Example - while it is reasonable to expect an init() function to fail (let's say
+because of failed memory allocation), it is not so normal to expect a parsing
+function to fail "the normal way" (just by returning appropriate error value)
+if NULL pointer is given instead of a line of commands. This is kind of parameters
+is checked with assert(). Failed assertion is considered a programmer error -
+there is either a bug in the library code or you are doing something wrong.
+Assertion fail  is not meant to occur at runtime. Despite this fact, custom
+assert macro is used to do "soft" assertions - you can define, what should
+happen (eg. log it or take appropriate action). A program should never abort at
+runtime because of failed assertion.
+
+
 Current status
 -----------------------------
 
@@ -158,13 +176,13 @@ Library is not much usable at this moment, only some main parts are implemented.
 
 * tree traversal is fully implemented
 * command line editing, suggestions and autocompletion is fully implemented
+* dynamic node creation is partially implemented, cleanup and documentation needed
 
 TODO:
 
 * code and API cleanup
 * more examples and documentation
 * value assignment is not yet implemented
-* dynamic node creation is not yet implemented
 
 
 Contributing
@@ -201,11 +219,4 @@ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
 ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-
-
-
-
-
-
 

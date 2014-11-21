@@ -20,14 +20,35 @@ const struct treecli_command test1_interface_print = {
 };
 
 
-/***************************** /interface values ******************************/
+/*************************** /interface/ifN values ****************************/
 
-const struct treecli_value test1_interface_enabled = {
+const struct treecli_value test1_interface_ifN_enabled = {
 	.name = "enabled",
 	.value = &test_value,
 	.value_type = TREECLI_VALUE_UINT32,
 	.default_value = &(int){1234},
 	.next = NULL
+};
+
+
+/***************************** /interface dnodes ******************************/
+
+int32_t test1_interface_ifN_create(struct treecli_parser *parser, uint32_t index, struct treecli_node *node, void *ctx) {
+
+	if (index <= 6) {
+		if (node->name != NULL) {
+			sprintf(node->name, "ethernet%d", index);
+		}
+		node->values = &test1_interface_ifN_enabled;
+		return 0;
+	}
+
+	return -1;
+}
+
+const struct treecli_dnode test1_interface_ifN = {
+	.name = "if",
+	.create = test1_interface_ifN_create,
 };
 
 
@@ -120,8 +141,8 @@ const struct treecli_node test1_power = {
 
 const struct treecli_node test1_interface = {
 	.name = "interface",
-	.values = &test1_interface_enabled,
 	.commands = &test1_interface_print,
+	.dsubnodes = &test1_interface_ifN,
 	.next = &test1_power
 };
 
