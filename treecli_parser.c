@@ -713,3 +713,67 @@ int32_t treecli_parser_set_mode(struct treecli_parser *parser, enum treecli_pars
 }
 
 
+int32_t treecli_parser_value_to_str(struct treecli_parser *parser, char *s, const struct treecli_value *value, uint32_t max) {
+	if (u_assert(parser != NULL) ||
+	    u_assert(s != NULL) ||
+	    u_assert(value != NULL) ||
+	    u_assert(value->value != NULL)) {
+		return TREECLI_PARSER_VALUE_TO_STR_FAILED;
+	}
+
+	/* TODO: time and date */
+	switch (value->value_type) {
+		case TREECLI_VALUE_INT32:
+			snprintf(s, max, "%d", *(int32_t *)value->value);
+			s[max - 1] = '\0';
+			break;
+
+		case TREECLI_VALUE_UINT32:
+			snprintf(s, max, "%d", *(uint32_t *)value->value);
+			s[max - 1] = '\0';
+			break;
+
+		case TREECLI_VALUE_STR:
+			strncpy(s, (char *)value->value, max);
+			s[max - 1] = '\0';
+			break;
+
+		case TREECLI_VALUE_PHYS:
+			if (u_assert(value->units != NULL)) {
+				return TREECLI_PARSER_VALUE_TO_STR_FAILED;
+			}
+			snprintf(s, max, "%d%s", *(int32_t *)value->value, value->units);
+			s[max - 1] = '\0';
+			break;
+
+		case TREECLI_VALUE_DATA:
+			if ((*(uint32_t *)value->value) > (1024 * 1024)) {
+				snprintf(s, max, "%dMiB", (*(uint32_t *)value->value) / 1024 / 1024);
+			} else if ((*(uint32_t *)value->value) > (1024)) {
+				snprintf(s, max, "%dKiB", (*(uint32_t *)value->value) / 1024);
+			} else {
+				snprintf(s, max, "%dB", (*(uint32_t *)value->value));
+			}
+			break;
+
+		default:
+			return TREECLI_PARSER_VALUE_TO_STR_FAILED;
+	}
+
+
+	return TREECLI_PARSER_VALUE_TO_STR_OK;
+}
+
+
+int32_t treecli_parser_str_to_value(struct treecli_parser *parser, struct treecli_value *value, const char *s) {
+	if (u_assert(parser != NULL) ||
+	    u_assert(s != NULL) ||
+	    u_assert(value != NULL)) {
+		return TREECLI_PARSER_STR_TO_VALUE_FAILED;
+	}
+
+
+	return TREECLI_PARSER_STR_TO_VALUE_OK;
+}
+
+

@@ -3,21 +3,7 @@
 
 
 /* Global variables to be manipulated during configuration */
-uint32_t test_value;
-
-
-/**************************** /interface commands *****************************/
-
-int32_t test1_interface_print_exec(struct treecli_parser *parser, void *exec_context) {
-	printf("printcommand issued, command context = %d\n", exec_context);
-};
-
-const struct treecli_command test1_interface_print = {
-	.name = "print",
-	.exec = test1_interface_print_exec,
-	.exec_context = (void *)1234,
-	.next = NULL
-};
+uint32_t test_value = 22554242;
 
 
 /*************************** /interface/ifN values ****************************/
@@ -25,8 +11,24 @@ const struct treecli_command test1_interface_print = {
 const struct treecli_value test1_interface_ifN_enabled = {
 	.name = "enabled",
 	.value = &test_value,
-	.value_type = TREECLI_VALUE_UINT32,
-	.default_value = &(int){1234},
+	.value_type = TREECLI_VALUE_DATA,
+	.next = NULL
+};
+
+
+/**************************** /interface commands *****************************/
+
+int32_t test1_interface_print_exec(struct treecli_parser *parser, void *exec_context) {
+	printf("printcommand issued, command context = %d\n", exec_context);
+	char val[10];
+	treecli_parser_value_to_str(parser, val, &test1_interface_ifN_enabled, sizeof(val));
+	printf("test value = %s\n", val);
+};
+
+const struct treecli_command test1_interface_print = {
+	.name = "print",
+	.exec = test1_interface_print_exec,
+	.exec_context = (void *)1234,
 	.next = NULL
 };
 

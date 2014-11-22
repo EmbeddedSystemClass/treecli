@@ -67,6 +67,8 @@ enum treecli_value_type {
 	TREECLI_VALUE_STR,
 	TREECLI_VALUE_TIME,
 	TREECLI_VALUE_DATE,
+	TREECLI_VALUE_DATA,
+	TREECLI_VALUE_PHYS
 };
 
 
@@ -107,6 +109,8 @@ struct treecli_value {
 	 * Type of value or value getter/setter.
 	 */
 	enum treecli_value_type value_type;
+
+	const char *units;
 
 	/* TODO: value boundaries */
 	/* TODO: valid values enum/iterator */
@@ -375,6 +379,14 @@ int32_t treecli_parser_dnode_get_name(struct treecli_parser *parser, const struc
 int32_t treecli_parser_set_mode(struct treecli_parser *parser, enum treecli_parser_mode mode);
 #define TREECLI_PARSER_SET_MODE_OK 0
 #define TREECLI_PARSER_SET_MODE_FAILED -1
+
+int32_t treecli_parser_value_to_str(struct treecli_parser *parser, char *s, const struct treecli_value *value, uint32_t max);
+#define TREECLI_PARSER_VALUE_TO_STR_OK 0
+#define TREECLI_PARSER_VALUE_TO_STR_FAILED -1
+
+int32_t treecli_parser_str_to_value(struct treecli_parser *parser, struct treecli_value *value, const char *s);
+#define TREECLI_PARSER_STR_TO_VALUE_OK 0
+#define TREECLI_PARSER_STR_TO_VALUE_FAILED -1
 
 
 
