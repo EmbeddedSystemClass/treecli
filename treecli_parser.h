@@ -32,7 +32,7 @@
  * modified according to custom needs.
  */
 #ifndef u_assert
-#define u_assert(e) ((e) ? (0) : (printf("Assertion '%s' failed in %s, line %d\n", #e, __FILE__, __LINE__), abort(), 1))
+#define u_assert(e) ((e) ? (0) : (u_assert_func(#e, __FILE__, __LINE__)))
 #endif
 
 
@@ -227,8 +227,7 @@ struct treecli_matches {
 };
 
 
-
-
+int __attribute__((weak)) u_assert_func(const char *a, const char *f, int n);
 
 int32_t treecli_print_tree(const struct treecli_node *top, int32_t indent);
 #define TREECLI_PRINT_TREE_OK 0

@@ -31,6 +31,13 @@
 #include "treecli_parser.h"
 
 
+int u_assert_func(const char *a, const char *f, int n) {
+	printf("Assertion '%s' failed in %s, line %d\n", a, f, n);
+	abort();
+	return 1;
+}
+
+
 int32_t treecli_print_tree(const struct treecli_node *top, int32_t indent) {
 	if (u_assert(top != NULL)) {
 		return TREECLI_PRINT_TREE_FAILED;
