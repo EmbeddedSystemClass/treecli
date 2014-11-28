@@ -223,7 +223,7 @@ struct treecli_matches {
 	const struct treecli_value *value;
 
 	char best_match[100];
-	int32_t best_match_len;
+	uint32_t best_match_len;
 };
 
 
@@ -256,7 +256,7 @@ int32_t treecli_parser_pos_print(struct treecli_parser *parser);
  *         TREECLI_TOKEN_GET_NONE if end of line was reached or
  *         TREECLI_TOKEN_GET_FAILED otherwise.
  */
-int32_t treecli_token_get(struct treecli_parser *parser, char **pos, char **token, uint32_t *len);
+int32_t treecli_token_get(struct treecli_parser *parser, const char **pos, const char **token, uint32_t *len);
 #define TREECLI_TOKEN_GET_OK 0
 #define TREECLI_TOKEN_GET_FAILED -1
 #define TREECLI_TOKEN_GET_NONE -2
@@ -320,7 +320,7 @@ int32_t treecli_parser_set_best_match_handler(struct treecli_parser *parser, int
 #define TREECLI_PARSER_SET_BEST_MATCH_HANDLER_OK 0
 #define TREECLI_PARSER_SET_BEST_MATCH_HANDLER_FAILED -1
 
-int32_t treecli_parser_strmatch(const char *s1, const char *s2);
+uint32_t treecli_parser_strmatch(const char *s1, const char *s2);
 
 int32_t treecli_parser_resolve_match(struct treecli_parser *parser, struct treecli_matches *matches, const char *token);
 #define TREECLI_PARSER_RESOLVE_MATCH_OK 0
@@ -330,7 +330,7 @@ int32_t treecli_parser_try_match(struct treecli_parser *parser, struct treecli_m
 #define TREECLI_PARSER_TRY_MATCH_OK 0
 #define TREECLI_PARSER_TRY_MATCH_FAILED -1
 
-int32_t treecli_parser_get_matches(struct treecli_parser *parser, char *token, uint32_t len, struct treecli_matches *matches);
+int32_t treecli_parser_get_matches(struct treecli_parser *parser, const char *token, uint32_t len, struct treecli_matches *matches);
 #define TREECLI_PARSER_GET_MATCHES_HELP 6
 #define TREECLI_PARSER_GET_MATCHES_DSUBNODE 5
 #define TREECLI_PARSER_GET_MATCHES_SUBNODE 4

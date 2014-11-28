@@ -106,7 +106,7 @@ int32_t treecli_parser_pos_print(struct treecli_parser *parser) {
 }
 
 
-int32_t treecli_token_get(struct treecli_parser *parser, char **pos, char **token, uint32_t *len) {
+int32_t treecli_token_get(struct treecli_parser *parser, const char **pos, const char **token, uint32_t *len) {
 	if (u_assert(parser != NULL) ||
 	    u_assert(pos != NULL) ||
 	    u_assert(token != NULL) ||
@@ -175,8 +175,8 @@ int32_t treecli_parser_parse_line(struct treecli_parser *parser, const char *lin
 	}
 
 	int32_t res;
-	char *pos = (char *)line;
-	char *token = NULL;
+	const char *pos = line;
+	const char *token = NULL;
 	uint32_t len;
 
 	/* save current position in case we will need to rollback the whole command */
@@ -307,7 +307,7 @@ int32_t treecli_parser_parse_line(struct treecli_parser *parser, const char *lin
 	if (parser->mode & TREECLI_PARSER_ALLOW_SUGGESTIONS) {
 		treecli_parser_set_mode(parser, TREECLI_PARSER_ALLOW_MATCHES);
 		struct treecli_matches matches;
-		int32_t ret = treecli_parser_get_matches(parser, "", 0, &matches);
+		treecli_parser_get_matches(parser, "", 0, &matches);
 	}
 
 	/* Reset the position if command execution was disabled or if the last
@@ -359,7 +359,7 @@ int32_t treecli_parser_set_best_match_handler(struct treecli_parser *parser, int
 }
 
 
-int32_t treecli_parser_strmatch(const char *s1, const char *s2) {
+uint32_t treecli_parser_strmatch(const char *s1, const char *s2) {
 	if(u_assert(s1 != NULL) ||
 	   u_assert(s2 != NULL)) {
 		return 0;
@@ -396,7 +396,7 @@ int32_t treecli_parser_resolve_match(struct treecli_parser *parser, struct treec
 		matches->best_match_len = strlen(token);
 	} else {
 		uint32_t r = treecli_parser_strmatch(matches->best_match, token);
-		if (r >= 0 && r < matches->best_match_len) {
+		if (r < matches->best_match_len) {
 			matches->best_match_len = r;
 		}
 	}
@@ -424,7 +424,7 @@ int32_t treecli_parser_try_match(struct treecli_parser *parser, struct treecli_m
 }
 
 
-int32_t treecli_parser_get_matches(struct treecli_parser *parser, char *token, uint32_t len, struct treecli_matches *matches) {
+int32_t treecli_parser_get_matches(struct treecli_parser *parser, const char *token, uint32_t len, struct treecli_matches *matches) {
 	if (u_assert(parser != NULL) ||
 	    u_assert(token != NULL) ||
 	    u_assert(matches != NULL)) {
@@ -699,7 +699,7 @@ int32_t treecli_parser_dnode_get_name(struct treecli_parser *parser, const struc
 	node.name = name;
 
 	/* default name is created */
-	sprintf(node.name, "%s%d", dnode->name, index);
+	sprintf(node.name, "%s%d", dnode->name, (int)index);
 
 	if (dnode->create != NULL && dnode->create(parser, index, &node, dnode->create_context) >= 0) {
 		return TREECLI_PARSER_DNODE_GET_NAME_OK;
@@ -731,12 +731,12 @@ int32_t treecli_parser_value_to_str(struct treecli_parser *parser, char *s, cons
 	/* TODO: time and date */
 	switch (value->value_type) {
 		case TREECLI_VALUE_INT32:
-			snprintf(s, max, "%d", *(int32_t *)value->value);
+			snprintf(s, max, "%ld", *(int32_t *)value->value);
 			s[max - 1] = '\0';
 			break;
 
 		case TREECLI_VALUE_UINT32:
-			snprintf(s, max, "%d", *(uint32_t *)value->value);
+			snprintf(s, max, "%lu", *(uint32_t *)value->value);
 			s[max - 1] = '\0';
 			break;
 
@@ -749,17 +749,17 @@ int32_t treecli_parser_value_to_str(struct treecli_parser *parser, char *s, cons
 			if (u_assert(value->units != NULL)) {
 				return TREECLI_PARSER_VALUE_TO_STR_FAILED;
 			}
-			snprintf(s, max, "%d%s", *(int32_t *)value->value, value->units);
+			snprintf(s, max, "%ld%s", *(int32_t *)value->value, value->units);
 			s[max - 1] = '\0';
 			break;
 
 		case TREECLI_VALUE_DATA:
 			if ((*(uint32_t *)value->value) > (1024 * 1024)) {
-				snprintf(s, max, "%dMiB", (*(uint32_t *)value->value) / 1024 / 1024);
+				snprintf(s, max, "%luMiB", (*(uint32_t *)value->value) / 1024 / 1024);
 			} else if ((*(uint32_t *)value->value) > (1024)) {
-				snprintf(s, max, "%dKiB", (*(uint32_t *)value->value) / 1024);
+				snprintf(s, max, "%luKiB", (*(uint32_t *)value->value) / 1024);
 			} else {
-				snprintf(s, max, "%dB", (*(uint32_t *)value->value));
+				snprintf(s, max, "%luB", *(uint32_t *)value->value);
 			}
 			break;
 
