@@ -26,6 +26,8 @@
 #include "treecli_parser.h"
 #include "lineedit.h"
 
+#define assert u_assert
+
 #ifndef _TREECLI_SHELL_H_
 #define _TREECLI_SHELL_H_
 

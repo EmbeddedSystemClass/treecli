@@ -26,13 +26,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include <assert.h>
 #include <string.h>
 
 #include "lineedit.h"
 #include "treecli_parser.h"
 #include "treecli_shell.h"
-
 
 int32_t treecli_shell_init(struct treecli_shell *sh, const struct treecli_node *top) {
 	assert(sh != NULL);
@@ -171,8 +169,8 @@ int32_t treecli_shell_match_handler(const char *token, void *ctx) {
 
 	struct treecli_shell *sh = (struct treecli_shell *)ctx;
 
-	/* TODO: reaplace with print handler */
-	printf("%s ", token);
+	treecli_shell_print_handler(token, (void *)sh);
+	treecli_shell_print_handler(" ", (void *)sh);
 
 	return 0;
 }

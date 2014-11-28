@@ -37,7 +37,7 @@ int u_assert_func(const char *a, const char *f, int n) {
 	return 1;
 }
 
-
+/*
 int32_t treecli_print_tree(const struct treecli_node *top, int32_t indent) {
 	if (u_assert(top != NULL)) {
 		return TREECLI_PRINT_TREE_FAILED;
@@ -58,7 +58,7 @@ int32_t treecli_print_tree(const struct treecli_node *top, int32_t indent) {
 
 	return TREECLI_PRINT_TREE_OK;
 }
-
+*/
 
 int32_t treecli_parser_pos_print(struct treecli_parser *parser) {
 	if (u_assert(parser != NULL) ||

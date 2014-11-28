@@ -27,6 +27,7 @@
 #ifndef _TREECLI_PARSER_H_
 #define _TREECLI_PARSER_H_
 
+
 /**
  * Custom assert definition. In an embedded environment, it can be made void or
  * modified according to custom needs.
@@ -34,7 +35,6 @@
 #ifndef u_assert
 #define u_assert(e) ((e) ? (0) : (u_assert_func(#e, __FILE__, __LINE__)))
 #endif
-
 
 #ifndef TREECLI_TREE_MAX_DEPTH
 #define TREECLI_TREE_MAX_DEPTH 8
