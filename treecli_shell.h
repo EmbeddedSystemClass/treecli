@@ -40,11 +40,11 @@
 #endif
 
 #ifndef TREECLI_SHELL_DEFAULT_PROMPT_COLOR
-#define TREECLI_SHELL_DEFAULT_PROMPT_COLOR LINEEDIT_FG_COLOR_GREEN
+#define TREECLI_SHELL_DEFAULT_PROMPT_COLOR ESC_COLOR_FG_GREEN
 #endif
 
 #ifndef TREECLI_SHELL_DEFAULT_ERROR_COLOR
-#define TREECLI_SHELL_DEFAULT_ERROR_COLOR LINEEDIT_FG_COLOR_RED
+#define TREECLI_SHELL_DEFAULT_ERROR_COLOR ESC_COLOR_FG_RED
 #endif
 
 /**
@@ -84,8 +84,8 @@ struct treecli_shell {
 	uint32_t autocomplete_at;
 
 	const char *hostname;
-	uint8_t prompt_color;
-	uint8_t error_color;
+	const char *prompt_color;
+	const char *error_color;
 };
 
 

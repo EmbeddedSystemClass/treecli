@@ -28,6 +28,7 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "u_assert.h"
 #include "lineedit.h"
 #include "treecli_parser.h"
 #include "treecli_shell.h"
@@ -120,14 +121,12 @@ int32_t treecli_shell_prompt_callback(struct lineedit *le, void *ctx) {
 		 * length have to be returned back to line editor to let it know
 		 * where actual editing begins. */
 		/* TODO: system/host name should be printed instead */
-		lineedit_escape_print(le, ESC_COLOR, sh->prompt_color);
-		lineedit_escape_print(le, ESC_BOLD, 0);
+		sh->print_handler(ESC_BOLD, sh->print_handler_ctx);
+		sh->print_handler(sh->prompt_color, sh->print_handler_ctx);
 		sh->print_handler(sh->hostname, sh->print_handler_ctx);
-		sh->print_handler(" ", sh->print_handler_ctx);
+		sh->print_handler(" " ESC_DEFAULT, sh->print_handler_ctx);
 		len += 1 + strlen(sh->hostname);
 
-		lineedit_escape_print(le, ESC_DEFAULT, 0);
-		lineedit_escape_print(le, ESC_COLOR, sh->prompt_color);
 
 		/* print actual working position in the tree */
 		uint32_t ret = treecli_parser_pos_print(&(sh->parser));
@@ -135,9 +134,7 @@ int32_t treecli_shell_prompt_callback(struct lineedit *le, void *ctx) {
 			len += ret;
 		}
 
-		lineedit_escape_print(le, ESC_BOLD, 0);
-		sh->print_handler(" > ", sh->print_handler_ctx);
-		lineedit_escape_print(le, ESC_DEFAULT, 0);
+		sh->print_handler(ESC_BOLD " > " ESC_DEFAULT, sh->print_handler_ctx);
 		len += 3;
 
 	} else {
@@ -215,7 +212,7 @@ int32_t treecli_shell_print_parser_result(struct treecli_shell *sh, int32_t res)
 	} else {
 		/* Error occured, print error position.
 		 * TODO: shift depending on prompt length*/
-		lineedit_escape_print(&(sh->line), ESC_COLOR, sh->error_color);
+		sh->print_handler(sh->error_color, sh->print_handler_ctx);
 		//~ lineedit_escape_print(&(sh->line), ESC_BOLD, 0);
 		for (uint32_t i = 0; i < (sh->parser.error_pos + sh->line.prompt_len); i++) {
 			sh->print_handler("-", sh->print_handler_ctx);
@@ -234,7 +231,7 @@ int32_t treecli_shell_print_parser_result(struct treecli_shell *sh, int32_t res)
 		if (res == TREECLI_PARSER_PARSE_LINE_CANNOT_MOVE) {
 			sh->print_handler("error: cannot change working position\n", sh->print_handler_ctx);
 		}
-		lineedit_escape_print(&(sh->line), ESC_DEFAULT, 0);
+		sh->print_handler(ESC_DEFAULT, sh->print_handler_ctx);
 		return TREECLI_SHELL_PRINT_PARSER_RESULT_OK;
 
 	}
