@@ -337,5 +337,16 @@ int32_t treecli_shell_keypress(struct treecli_shell *sh, int c) {
 }
 
 
+int32_t treecli_shell_set_parser_context(struct treecli_shell *sh, void *context) {
+	u_assert(sh != NULL);
+	u_assert(context != NULL);
+
+	/* Set context of the parser directly. */
+	if (treecli_parser_set_context(&(sh->parser), context) != TREECLI_PARSER_SET_CONTEXT_OK) {
+		return TREECLI_SHELL_SET_PRINT_HANDLER_FAILED;
+	}
+
+	return TREECLI_SHELL_SET_PRINT_HANDLER_OK;
+}
 
 

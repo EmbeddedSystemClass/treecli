@@ -225,7 +225,12 @@ int32_t treecli_shell_keypress(struct treecli_shell *sh, int c);
 #define TREECLI_SHELL_KEYPRESS_FAILED -1
 
 
-
+/**
+ * @brief Set parser context.
+ */
+int32_t treecli_shell_set_parser_context(struct treecli_shell *sh, void *context);
+#define TREECLI_SHELL_SET_PARSER_CONTEXT_OK 0
+#define TREECLI_SHELL_SET_PARSER_CONTEXT_FAILED -1
 
 
 #endif

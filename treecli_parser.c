@@ -779,3 +779,12 @@ int32_t treecli_parser_str_to_value(struct treecli_parser *parser, struct treecl
 }
 
 
+int32_t treecli_parser_set_context(struct treecli_parser *parser, void *context) {
+	if (u_assert(parser != NULL && context != NULL)) {
+		return TREECLI_PARSER_SET_CONTEXT_FAILED;
+	}
+
+	parser->context = context;
+
+	return TREECLI_PARSER_SET_CONTEXT_OK;
+}

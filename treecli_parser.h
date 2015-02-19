@@ -204,6 +204,13 @@ struct treecli_parser {
 	uint32_t error_len;
 
 	enum treecli_parser_mode mode;
+
+	/**
+	 * The context in which the parser is running. Can contain arbitrary
+	 * user data (eg. pointer to stdin/stdout or environment implementation).
+	 * It can be used from the command exec callbacks.
+	 */
+	void *context;
 };
 
 struct treecli_matches {
@@ -377,6 +384,9 @@ int32_t treecli_parser_str_to_value(struct treecli_parser *parser, struct treecl
 #define TREECLI_PARSER_STR_TO_VALUE_OK 0
 #define TREECLI_PARSER_STR_TO_VALUE_FAILED -1
 
+int32_t treecli_parser_set_context(struct treecli_parser *parser, void *context);
+#define TREECLI_PARSER_SET_CONTEXT_OK 0
+#define TREECLI_PARSER_SET_CONTEXT_FAILED -1
 
 
 #endif
