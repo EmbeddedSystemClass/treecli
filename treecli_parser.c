@@ -124,13 +124,31 @@ int32_t treecli_token_get(struct treecli_parser *parser, const char **pos, const
 		return TREECLI_TOKEN_GET_NONE;
 	}
 
-	/* mark start of the token and go forward while valid characters are found*/
+	/* mark start of the token */
 	*token = *pos;
-	while ((**pos >= 'a' && **pos <= 'z') || (**pos >= 'A' && **pos <= 'Z') ||
-	       (**pos >= '0' && **pos <= '9') || **pos == '-' || **pos == '_' || **pos == '.' || **pos == '/' || **pos == '?') {
-
+	if (**pos == '(' || **pos == ')' || **pos == '=' || **pos == '/' || **pos == '?') {
+		/* Single character tokens. */
 		(*pos)++;
+	} else if ((**pos >= '0' && **pos <= '9') || **pos == '-' || **pos == '.') {
+		/* Numbers. */
+		(*pos)++;
+		while ((**pos >= '0' && **pos <= '9') || **pos == '.') {
+			(*pos)++;
+		}
+	} else if ((**pos >= 'a' && **pos <= 'z') || (**pos >= 'A' && **pos <= 'Z') || **pos == '_') {
+		/* Alphanumeric tokens. */
+		(*pos)++;
+		while ((**pos >= 'a' && **pos <= 'z') || (**pos >= 'A' && **pos <= 'Z') || (**pos >= '0' && **pos <= '9') || **pos == '_') {
+			(*pos)++;
+		}
+	} else if (**pos == '.') {
+		/* Double dot. */
+		(*pos)++;
+		while (**pos == '.') {
+			(*pos)++;
+		}
 	}
+
 	*len = *pos - *token;
 
 	/* no valid token has been found */
