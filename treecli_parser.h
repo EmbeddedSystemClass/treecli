@@ -150,10 +150,10 @@ struct treecli_node {
 	char *name;
 	char *help;
 
-	const struct treecli_node *subnodes;
-	const struct treecli_dnode *dsubnodes;
-	const struct treecli_command *commands;
-	const struct treecli_value *values;
+	const struct treecli_node *(*subnodes)[];
+	const struct treecli_dnode *(*dsubnodes)[];
+	const struct treecli_command *(*commands)[];
+	const struct treecli_value *(*values)[];
 
 	const struct treecli_node *next;
 };
