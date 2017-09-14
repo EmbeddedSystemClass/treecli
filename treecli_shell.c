@@ -163,14 +163,22 @@ int32_t treecli_shell_print_handler(const char *line, void *ctx) {
 }
 
 
-int32_t treecli_shell_match_handler(const char *token, void *ctx) {
+int32_t treecli_shell_match_handler(const char *token, enum treecli_match_type match_type, void *ctx) {
 	assert(token != NULL);
 	assert(ctx != NULL);
 
 	struct treecli_shell *sh = (struct treecli_shell *)ctx;
 
+	if (match_type == TREECLI_MATCH_TYPE_VALUE) {
+		lineedit_escape_print(&(sh->line), ESC_COLOR, LINEEDIT_FG_COLOR_YELLOW);
+	} else if (match_type == TREECLI_MATCH_TYPE_COMMAND) {
+		lineedit_escape_print(&(sh->line), ESC_COLOR, LINEEDIT_FG_COLOR_BLUE);
+	} else {
+		lineedit_escape_print(&(sh->line), ESC_COLOR, LINEEDIT_FG_COLOR_GREEN);
+	}
 	treecli_shell_print_handler(token, (void *)sh);
 	treecli_shell_print_handler(" ", (void *)sh);
+	lineedit_escape_print(&(sh->line), ESC_DEFAULT, 0);
 
 	return 0;
 }
@@ -233,6 +241,18 @@ int32_t treecli_shell_print_parser_result(struct treecli_shell *sh, int32_t res)
 		}
 		if (res == TREECLI_PARSER_PARSE_LINE_CANNOT_MOVE) {
 			sh->print_handler("error: cannot change working position\n", sh->print_handler_ctx);
+		}
+		if (res == TREECLI_PARSER_PARSE_LINE_EXPECTING_VALUE) {
+			sh->print_handler("error: value expected\n", sh->print_handler_ctx);
+		}
+		if (res == TREECLI_PARSER_PARSE_LINE_UNEXPECTED_TOKEN) {
+			sh->print_handler("error: unexpected token\n", sh->print_handler_ctx);
+		}
+		if (res == TREECLI_PARSER_PARSE_LINE_COMMAND_FAILED) {
+			sh->print_handler("error: command execution failed\n", sh->print_handler_ctx);
+		}
+		if (res == TREECLI_PARSER_PARSE_LINE_VALUE_FAILED) {
+			sh->print_handler("error: value parsing failed\n", sh->print_handler_ctx);
 		}
 		lineedit_escape_print(&(sh->line), ESC_DEFAULT, 0);
 		return TREECLI_SHELL_PRINT_PARSER_RESULT_OK;
@@ -340,5 +360,15 @@ int32_t treecli_shell_keypress(struct treecli_shell *sh, int c) {
 }
 
 
+int32_t treecli_shell_set_parser_context(struct treecli_shell *sh, void *context) {
+	u_assert(sh != NULL);
+	u_assert(context != NULL);
 
+	/* Set context of the parser directly. */
+	if (treecli_parser_set_context(&(sh->parser), context) != TREECLI_PARSER_SET_CONTEXT_OK) {
+		return TREECLI_SHELL_SET_PRINT_HANDLER_FAILED;
+	}
+
+	return TREECLI_SHELL_SET_PRINT_HANDLER_OK;
+}
 

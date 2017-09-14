@@ -138,7 +138,7 @@ int32_t treecli_token_get(struct treecli_parser *parser, const char **pos, const
 	} else if ((**pos >= 'a' && **pos <= 'z') || (**pos >= 'A' && **pos <= 'Z') || **pos == '_') {
 		/* Alphanumeric tokens. */
 		(*pos)++;
-		while ((**pos >= 'a' && **pos <= 'z') || (**pos >= 'A' && **pos <= 'Z') || (**pos >= '0' && **pos <= '9') || **pos == '_') {
+		while ((**pos >= 'a' && **pos <= 'z') || (**pos >= 'A' && **pos <= 'Z') || (**pos >= '0' && **pos <= '9') || **pos == '_' || **pos == '-') {
 			(*pos)++;
 		}
 	} else if (**pos == '.') {
@@ -165,6 +165,8 @@ int32_t treecli_parser_init(struct treecli_parser *parser, const struct treecli_
 	    u_assert(top != NULL)) {
 		return TREECLI_PARSER_INIT_FAILED;
 	}
+
+	memset(parser, 0, sizeof(struct treecli_parser));
 
 	parser->top = top;
 	if (treecli_parser_pos_init(&(parser->pos)) != TREECLI_PARSER_POS_INIT_OK) {
@@ -204,6 +206,8 @@ int32_t treecli_parser_parse_line(struct treecli_parser *parser, const char *lin
 	/* We need an information if the last matched action was a tree traversal
 	 * action or not. We are setting this to 1 when we move in the tree. */
 	int last_match_subnode = 0;
+
+	parser->parsing_context = TREECLI_PARSER_CONTEXT_NODE;
 
 	/* Iterate over the whole command and get all tokens */
 	while ((res = treecli_token_get(parser, &pos, &token, &len)) == TREECLI_TOKEN_GET_OK) {
@@ -303,10 +307,23 @@ int32_t treecli_parser_parse_line(struct treecli_parser *parser, const char *lin
 			}
 
 			if (ret == TREECLI_PARSER_GET_MATCHES_VALUE) {
-				/* TODO: get operation */
-				/* TODO: get literal */
 				if (parser->mode & TREECLI_PARSER_ALLOW_EXEC) {
+					parser->parsing_value = matches.value;
+				}
+			}
 
+			if (ret == TREECLI_PARSER_GET_MATCHES_VALUE_OPERATOR) {
+				/** @todo Always assignment for now. Add code for multiple operators. */
+				if (parser->mode & TREECLI_PARSER_ALLOW_EXEC) {
+				}
+			}
+
+			if (ret == TREECLI_PARSER_GET_MATCHES_VALUE_LITERAL) {
+				if (parser->mode & TREECLI_PARSER_ALLOW_EXEC) {
+					if (treecli_parser_str_to_value(parser, parser->parsing_value, token, len) != TREECLI_PARSER_STR_TO_VALUE_OK) {
+						treecli_parser_pos_copy(&(parser->pos), &parser_pos_saved);
+						return TREECLI_PARSER_PARSE_LINE_VALUE_FAILED;
+					}
 				}
 			}
 
@@ -334,6 +351,20 @@ int32_t treecli_parser_parse_line(struct treecli_parser *parser, const char *lin
 		treecli_parser_pos_copy(&(parser->pos), &parser_pos_saved);
 	}
 
+	/* Handle some special cases, eg. no value literal at the end. Save position
+	 * of the error. */
+	parser->error_pos = (uint32_t)(pos - line) - len;
+	parser->error_len = 0;
+
+	if (parser->parsing_context == TREECLI_PARSER_CONTEXT_VALUE_LITERAL && (parser->mode & TREECLI_PARSER_ALLOW_EXEC)) {
+		parser->error_pos += 2;
+		return TREECLI_PARSER_PARSE_LINE_EXPECTING_VALUE;
+	}
+
+	if (res == TREECLI_TOKEN_GET_UNEXPECTED) {
+		return TREECLI_PARSER_PARSE_LINE_UNEXPECTED_TOKEN;
+	}
+
 	return TREECLI_PARSER_PARSE_LINE_OK;
 }
 
@@ -351,7 +382,7 @@ int32_t treecli_parser_set_print_handler(struct treecli_parser *parser, int32_t 
 }
 
 
-int32_t treecli_parser_set_match_handler(struct treecli_parser *parser, int32_t (*match_handler)(const char *token, void *ctx), void *ctx) {
+int32_t treecli_parser_set_match_handler(struct treecli_parser *parser, int32_t (*match_handler)(const char *token, enum treecli_match_type match_type, void *ctx), void *ctx) {
 	if (u_assert(parser != NULL) ||
 	    u_assert(match_handler != NULL)) {
 		return TREECLI_PARSER_SET_MATCH_HANDLER_FAILED;
@@ -402,8 +433,10 @@ int32_t treecli_parser_resolve_match(struct treecli_parser *parser, struct treec
 	}
 
 	if (parser->mode & TREECLI_PARSER_ALLOW_MATCHES) {
+
+		/** @todo determine the match type */
 		if (parser->match_handler) {
-			parser->match_handler(token, parser->match_handler_ctx);
+			parser->match_handler(token, TREECLI_MATCH_TYPE_NODE, parser->match_handler_ctx);
 		}
 	}
 
@@ -464,76 +497,93 @@ int32_t treecli_parser_get_matches(struct treecli_parser *parser, const char *to
 		return TREECLI_PARSER_GET_MATCHES_FAILED;
 	}
 
-	/* Try to match special tokens */
-	if (treecli_parser_try_match(parser, matches, token, len, "..") == TREECLI_PARSER_TRY_MATCH_OK) {
-		ret = TREECLI_PARSER_GET_MATCHES_UP;
-	}
-	if (treecli_parser_try_match(parser, matches, token, len, "/") == TREECLI_PARSER_TRY_MATCH_OK) {
-		ret = TREECLI_PARSER_GET_MATCHES_TOP;
-	}
-	if (treecli_parser_try_match(parser, matches, token, len, "?") == TREECLI_PARSER_TRY_MATCH_OK) {
-		ret = TREECLI_PARSER_GET_MATCHES_HELP;
-	}
+	if (parser->parsing_context == TREECLI_PARSER_CONTEXT_VALUE_LITERAL) {
+		/** @todo add matches of numbers, enums, etc. */
+		ret = TREECLI_PARSER_GET_MATCHES_VALUE_LITERAL;
+		parser->parsing_context = TREECLI_PARSER_CONTEXT_NODE;
+		matches->count++;
 
-	/* Match all statically set subnodes. */
-	{
-		const struct treecli_node *n = node.subnodes;
-		while (n != NULL && n->name != NULL) {
+	} else if (parser->parsing_context == TREECLI_PARSER_CONTEXT_NODE || parser->parsing_context == TREECLI_PARSER_CONTEXT_VALUE_OPERATOR) {
 
-			if (treecli_parser_try_match(parser, matches, token, len, n->name) == TREECLI_PARSER_TRY_MATCH_OK) {
-				matches->subnode = n;
-				ret = TREECLI_PARSER_GET_MATCHES_SUBNODE;
-			}
-			n = n->next;
+		/* Try to match special tokens */
+		if (treecli_parser_try_match(parser, matches, token, len, "..") == TREECLI_PARSER_TRY_MATCH_OK) {
+			ret = TREECLI_PARSER_GET_MATCHES_UP;
 		}
-	}
+		if (treecli_parser_try_match(parser, matches, token, len, "/") == TREECLI_PARSER_TRY_MATCH_OK) {
+			ret = TREECLI_PARSER_GET_MATCHES_TOP;
+		}
+		if (treecli_parser_try_match(parser, matches, token, len, "?") == TREECLI_PARSER_TRY_MATCH_OK) {
+			ret = TREECLI_PARSER_GET_MATCHES_HELP;
+		}
 
-	/* Match all dynamically constructed subnodes */
-	{
-		const struct treecli_dnode *d = node.dsubnodes;
-		while (d != NULL && d->name != NULL) {
+		/* Match value operators. */
+		if (parser->parsing_context == TREECLI_PARSER_CONTEXT_VALUE_OPERATOR &&
+		    treecli_parser_try_match(parser, matches, token, len, "=") == TREECLI_PARSER_TRY_MATCH_OK) {
+			ret = TREECLI_PARSER_GET_MATCHES_VALUE_OPERATOR;
+			parser->parsing_context = TREECLI_PARSER_CONTEXT_VALUE_LITERAL;
+		}
 
-			uint32_t i = 0;
-			while (i < TREECLI_DNODE_MAX_COUNT) {
-				char name[TREECLI_DNODE_MAX_NAME_LEN];
-				if (treecli_parser_dnode_get_name(parser, d, i, name) != TREECLI_PARSER_DNODE_GET_NAME_OK) {
-					break;
+		/* Match all statically set subnodes. */
+		{
+			const struct treecli_node *n = node.subnodes;
+			while (n != NULL && n->name != NULL) {
+
+				if (treecli_parser_try_match(parser, matches, token, len, n->name) == TREECLI_PARSER_TRY_MATCH_OK) {
+					matches->subnode = n;
+					ret = TREECLI_PARSER_GET_MATCHES_SUBNODE;
 				}
-				/* if the node was successfully created */
-				if (treecli_parser_try_match(parser, matches, token, len, name) == TREECLI_PARSER_TRY_MATCH_OK) {
-					matches->dsubnode = d;
-					matches->dsubnode_index = i;
-					ret = TREECLI_PARSER_GET_MATCHES_DSUBNODE;
+				n = n->next;
+			}
+		}
+
+		/* Match all dynamically constructed subnodes */
+		{
+			const struct treecli_dnode *d = node.dsubnodes;
+			while (d != NULL && d->name != NULL) {
+
+				uint32_t i = 0;
+				while (i < TREECLI_DNODE_MAX_COUNT) {
+					char name[TREECLI_DNODE_MAX_NAME_LEN];
+					if (treecli_parser_dnode_get_name(parser, d, i, name) != TREECLI_PARSER_DNODE_GET_NAME_OK) {
+						break;
+					}
+					/* if the node was successfully created */
+					if (treecli_parser_try_match(parser, matches, token, len, name) == TREECLI_PARSER_TRY_MATCH_OK) {
+						matches->dsubnode = d;
+						matches->dsubnode_index = i;
+						ret = TREECLI_PARSER_GET_MATCHES_DSUBNODE;
+					}
+					i++;
 				}
-				i++;
+				d = d->next;
 			}
-			d = d->next;
 		}
-	}
 
-	/* Match values at current position/level. */
-	{
-		const struct treecli_value *v = node.values;
-		while (v != NULL && v->name != NULL) {
+		/* Match values at current position/level. */
+		{
+			const struct treecli_value *v = node.values;
+			while (v != NULL && v->name != NULL) {
 
-			if (treecli_parser_try_match(parser, matches, token, len, v->name) == TREECLI_PARSER_TRY_MATCH_OK) {
-				matches->value = v;
-				ret = TREECLI_PARSER_GET_MATCHES_VALUE;
+				if (treecli_parser_try_match(parser, matches, token, len, v->name) == TREECLI_PARSER_TRY_MATCH_OK) {
+					matches->value = v;
+					parser->parsing_context = TREECLI_PARSER_CONTEXT_VALUE_OPERATOR;
+					ret = TREECLI_PARSER_GET_MATCHES_VALUE;
+				}
+				v = v->next;
 			}
-			v = v->next;
 		}
-	}
 
-	/* And match commands at current position/level. */
-	{
-		const struct treecli_command *c = node.commands;
-		while (c != NULL && c->name != NULL) {
+		/* And match commands at current position/level. */
+		{
+			const struct treecli_command *c = node.commands;
+			while (c != NULL && c->name != NULL) {
 
-			if (treecli_parser_try_match(parser, matches, token, len, c->name) == TREECLI_PARSER_TRY_MATCH_OK) {
-				matches->command = c;
-				ret = TREECLI_PARSER_GET_MATCHES_COMMAND;
+				if (treecli_parser_try_match(parser, matches, token, len, c->name) == TREECLI_PARSER_TRY_MATCH_OK) {
+					matches->command = c;
+					ret = TREECLI_PARSER_GET_MATCHES_COMMAND;
+				}
+				c = c->next;
 			}
-			c = c->next;
 		}
 	}
 
@@ -790,15 +840,60 @@ int32_t treecli_parser_value_to_str(struct treecli_parser *parser, char *s, cons
 }
 
 
-int32_t treecli_parser_str_to_value(struct treecli_parser *parser, struct treecli_value *value, const char *s) {
+int32_t treecli_parser_str_to_value(struct treecli_parser *parser, const struct treecli_value *value, const char *s, uint32_t len) {
 	if (u_assert(parser != NULL) ||
 	    u_assert(s != NULL) ||
 	    u_assert(value != NULL)) {
 		return TREECLI_PARSER_STR_TO_VALUE_FAILED;
 	}
 
+	switch (value->value_type) {
+		case TREECLI_VALUE_INT32: {
+				int32_t v = 0;
+				bool negative = false;
+				for (uint32_t i = 0; i < len; i++) {
+					if (s[i] == '-') {
+						negative = true;
+					} else if (s[i] >= '0' && s[i] <= '9') {
+						v = v * 10 + (s[i] - '0');
+					} else {
+						return TREECLI_PARSER_STR_TO_VALUE_FAILED;
+					}
+				}
+				if (negative) {
+					v = -v;
+				}
+				*(int32_t *)value->value = v;
+			}
+			break;
+
+		case TREECLI_VALUE_UINT32: {
+				uint32_t v = 0;
+				for (uint32_t i = 0; i < len; i++) {
+					if (s[i] >= '0' && s[i] <= '9') {
+						v = v * 10 + (s[i] - '0');
+					} else {
+						return TREECLI_PARSER_STR_TO_VALUE_FAILED;
+					}
+				}
+				*(uint32_t *)value->value = v;
+			}
+			break;
+
+		default:
+			return TREECLI_PARSER_VALUE_TO_STR_FAILED;
+	}
 
 	return TREECLI_PARSER_STR_TO_VALUE_OK;
 }
 
 
+int32_t treecli_parser_set_context(struct treecli_parser *parser, void *context) {
+	if (u_assert(parser != NULL && context != NULL)) {
+		return TREECLI_PARSER_SET_CONTEXT_FAILED;
+	}
+
+	parser->context = context;
+
+	return TREECLI_PARSER_SET_CONTEXT_OK;
+}

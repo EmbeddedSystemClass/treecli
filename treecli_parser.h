@@ -27,6 +27,17 @@
 #ifndef _TREECLI_PARSER_H_
 #define _TREECLI_PARSER_H_
 
+#include <stdint.h>
+#include <stdbool.h>
+
+
+/**
+ * Custom assert definition. In an embedded environment, it can be made void or
+ * modified according to custom needs.
+ */
+#ifndef u_assert
+#define u_assert(e) ((e) ? (0) : (u_assert_func(#e, __FILE__, __LINE__)))
+#endif
 
 /**
  * Custom assert definition. In an embedded environment, it can be made void or
@@ -195,6 +206,18 @@ enum treecli_parser_mode {
 	TREECLI_PARSER_ALLOW_EXEC = 8
 };
 
+enum treecli_parser_context {
+	TREECLI_PARSER_CONTEXT_NODE = 0,
+	TREECLI_PARSER_CONTEXT_VALUE_OPERATOR,
+	TREECLI_PARSER_CONTEXT_VALUE_LITERAL,
+};
+
+enum treecli_match_type {
+	TREECLI_MATCH_TYPE_NODE = 0,
+	TREECLI_MATCH_TYPE_VALUE,
+	TREECLI_MATCH_TYPE_COMMAND,
+};
+
 struct treecli_parser {
 	const struct treecli_node *top;
 	struct treecli_parser_pos pos;
@@ -202,7 +225,7 @@ struct treecli_parser {
 	int32_t (*print_handler)(const char *line, void *ctx);
 	void *print_handler_ctx;
 
-	int32_t (*match_handler)(const char *token, void *ctx);
+	int32_t (*match_handler)(const char *token, enum treecli_match_type match_type, void *ctx);
 	void *match_handler_ctx;
 
 	int32_t (*best_match_handler)(const char *token, uint32_t token_len, uint32_t match_pos, uint32_t match_len, void *ctx);
@@ -212,6 +235,11 @@ struct treecli_parser {
 	uint32_t error_len;
 
 	enum treecli_parser_mode mode;
+
+	const struct treecli_value *parsing_value;
+	enum treecli_parser_context parsing_context;
+
+	void *context;
 };
 
 struct treecli_matches {
@@ -306,13 +334,15 @@ int32_t treecli_parser_parse_line(struct treecli_parser *parser, const char *lin
 #define TREECLI_PARSER_PARSE_LINE_CANNOT_MOVE -4
 #define TREECLI_PARSER_PARSE_LINE_COMMAND_FAILED -5
 #define TREECLI_PARSER_PARSE_LINE_VALUE_FAILED -6
+#define TREECLI_PARSER_PARSE_LINE_EXPECTING_VALUE -7
+#define TREECLI_PARSER_PARSE_LINE_UNEXPECTED_TOKEN -8
 
 
 int32_t treecli_parser_set_print_handler(struct treecli_parser *parser, int32_t (*print_handler)(const char *line, void *ctx), void *ctx);
 #define TREECLI_PARSER_SET_PRINT_HANDLER_OK 0
 #define TREECLI_PARSER_SET_PRINT_HANDLER_FAILED -1
 
-int32_t treecli_parser_set_match_handler(struct treecli_parser *parser, int32_t (*match_handler)(const char *token, void *ctx), void *ctx);
+int32_t treecli_parser_set_match_handler(struct treecli_parser *parser, int32_t (*match_handler)(const char *token, enum treecli_match_type match_type, void *ctx), void *ctx);
 #define TREECLI_PARSER_SET_MATCH_HANDLER_OK 0
 #define TREECLI_PARSER_SET_MATCH_HANDLER_FAILED -1
 
@@ -331,6 +361,8 @@ int32_t treecli_parser_try_match(struct treecli_parser *parser, struct treecli_m
 #define TREECLI_PARSER_TRY_MATCH_FAILED -1
 
 int32_t treecli_parser_get_matches(struct treecli_parser *parser, const char *token, uint32_t len, struct treecli_matches *matches);
+#define TREECLI_PARSER_GET_MATCHES_VALUE_LITERAL 8
+#define TREECLI_PARSER_GET_MATCHES_VALUE_OPERATOR 7
 #define TREECLI_PARSER_GET_MATCHES_HELP 6
 #define TREECLI_PARSER_GET_MATCHES_DSUBNODE 5
 #define TREECLI_PARSER_GET_MATCHES_SUBNODE 4
@@ -383,10 +415,13 @@ int32_t treecli_parser_value_to_str(struct treecli_parser *parser, char *s, cons
 #define TREECLI_PARSER_VALUE_TO_STR_OK 0
 #define TREECLI_PARSER_VALUE_TO_STR_FAILED -1
 
-int32_t treecli_parser_str_to_value(struct treecli_parser *parser, struct treecli_value *value, const char *s);
+int32_t treecli_parser_str_to_value(struct treecli_parser *parser, const struct treecli_value *value, const char *s, uint32_t len);
 #define TREECLI_PARSER_STR_TO_VALUE_OK 0
 #define TREECLI_PARSER_STR_TO_VALUE_FAILED -1
 
+int32_t treecli_parser_set_context(struct treecli_parser *parser, void *context);
+#define TREECLI_PARSER_SET_CONTEXT_OK 0
+#define TREECLI_PARSER_SET_CONTEXT_FAILED -1
 
 
 #endif

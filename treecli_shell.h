@@ -174,7 +174,7 @@ int32_t treecli_shell_print_handler(const char *line, void *ctx);
  *
  * @return Zero on success, negative integer on failure.
  */
-int32_t treecli_shell_match_handler(const char *token, void *ctx);
+int32_t treecli_shell_match_handler(const char *token, enum treecli_match_type match_type, void *ctx);
 
 
 /**
@@ -224,8 +224,9 @@ int32_t treecli_shell_keypress(struct treecli_shell *sh, int c);
 #define TREECLI_SHELL_KEYPRESS_OK 0
 #define TREECLI_SHELL_KEYPRESS_FAILED -1
 
-
-
+int32_t treecli_shell_set_parser_context(struct treecli_shell *sh, void *context);
+#define TREECLI_SHELL_SET_PARSER_CONTEXT_OK 0
+#define TREECLI_SHELL_SET_PARSER_CONTEXT_FAILED -1
 
 
 #endif
