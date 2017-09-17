@@ -138,7 +138,7 @@ int32_t treecli_token_get(struct treecli_parser *parser, const char **pos, const
 	} else if ((**pos >= 'a' && **pos <= 'z') || (**pos >= 'A' && **pos <= 'Z') || **pos == '_') {
 		/* Alphanumeric tokens. */
 		(*pos)++;
-		while ((**pos >= 'a' && **pos <= 'z') || (**pos >= 'A' && **pos <= 'Z') || (**pos >= '0' && **pos <= '9') || **pos == '_' || **pos == '-') {
+		while ((**pos >= 'a' && **pos <= 'z') || (**pos >= 'A' && **pos <= 'Z') || (**pos >= '0' && **pos <= '9') || **pos == '_' || **pos == '-' || **pos == ':') {
 			(*pos)++;
 		}
 	} else if (**pos == '.') {
