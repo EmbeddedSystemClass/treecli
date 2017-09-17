@@ -79,7 +79,8 @@ enum treecli_value_type {
 	TREECLI_VALUE_TIME,
 	TREECLI_VALUE_DATE,
 	TREECLI_VALUE_DATA,
-	TREECLI_VALUE_PHYS
+	TREECLI_VALUE_PHYS,
+	TREECLI_VALUE_BOOL,
 };
 
 
@@ -133,8 +134,8 @@ struct treecli_value {
 	 * is requested. Both functions are called with get_set_context passed
 	 * as their ctx argument.
 	 * */
-	int32_t (*get)(struct treecli_parser *parser, void *ctx, struct treecli_value *value, void *buf);
-	int32_t (*set)(struct treecli_parser *parser, void *ctx, struct treecli_value *value, void *buf);
+	int32_t (*get)(struct treecli_parser *parser, void *ctx, struct treecli_value *value, void *buf, size_t *len);
+	int32_t (*set)(struct treecli_parser *parser, void *ctx, struct treecli_value *value, void *buf, size_t len);
 	void *get_set_context;
 
 	const struct treecli_value *next;

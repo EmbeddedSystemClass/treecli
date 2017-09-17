@@ -853,7 +853,12 @@ int32_t treecli_parser_str_to_value(struct treecli_parser *parser, const struct 
 				if (negative) {
 					v = -v;
 				}
-				*(int32_t *)value->value = v;
+				if (value->value != NULL) {
+					*(int32_t *)value->value = v;
+				}
+				if (value->set != NULL) {
+					value->set(parser, value->get_set_context, value, (void *)&v, 4);
+				}
 			}
 			break;
 
@@ -866,7 +871,48 @@ int32_t treecli_parser_str_to_value(struct treecli_parser *parser, const struct 
 						return TREECLI_PARSER_STR_TO_VALUE_FAILED;
 					}
 				}
-				*(uint32_t *)value->value = v;
+				if (value->value != NULL) {
+					*(uint32_t *)value->value = v;
+				}
+				if (value->set != NULL) {
+					value->set(parser, value->get_set_context, value, (void *)&v, 4);
+				}
+			}
+			break;
+
+		case TREECLI_VALUE_STR: {
+				if (value->set != NULL) {
+					value->set(parser, value->get_set_context, value, (void *)s, len);
+				}
+			}
+			break;
+
+		case TREECLI_VALUE_BOOL: {
+				bool v = false;
+				if (len == 1) {
+					if (s[0] == 'f' || s[0] == 'F' || s[0] == '0' || s[0] == 'n' || s[0] == 'N') {
+						v = false;
+					}
+					if (s[0] == 't' || s[0] == 'T' || s[0] == '1' || s[0] == 'y' || s[0] == 'Y') {
+						v = true;
+					}
+				}
+				if (len == 2 && (strncmp(s, "no", 2) != 0)) {
+					v = false;
+				}
+				if (len == 3 && (strncmp(s, "yes", 3) != 0)) {
+					v = true;
+				}
+				if (len == 4 && (strncmp(s, "true", 4) != 0)) {
+					v = true;
+				}
+				if (len == 5 && (strncmp(s, "false", 5) != 0)) {
+					v = false;
+				}
+
+				if (value->set != NULL) {
+					value->set(parser, value->get_set_context, value, (void *)&v, 4);
+				}
 			}
 			break;
 
