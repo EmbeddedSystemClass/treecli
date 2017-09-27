@@ -39,14 +39,6 @@
 #define u_assert(e) ((e) ? (0) : (u_assert_func(#e, __FILE__, __LINE__)))
 #endif
 
-/**
- * Custom assert definition. In an embedded environment, it can be made void or
- * modified according to custom needs.
- */
-#ifndef u_assert
-#define u_assert(e) ((e) ? (0) : (u_assert_func(#e, __FILE__, __LINE__)))
-#endif
-
 #ifndef TREECLI_TREE_MAX_DEPTH
 #define TREECLI_TREE_MAX_DEPTH 8
 #endif
@@ -255,8 +247,6 @@ struct treecli_matches {
 	uint32_t best_match_len;
 };
 
-
-int __attribute__((weak)) u_assert_func(const char *a, const char *f, int n);
 
 int32_t treecli_print_tree(const struct treecli_node *top, int32_t indent);
 #define TREECLI_PRINT_TREE_OK 0

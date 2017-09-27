@@ -31,7 +31,7 @@
 #include "treecli_parser.h"
 
 
-int u_assert_func(const char *a, const char *f, int n) {
+int __attribute__((weak)) u_assert_func(const char *a, const char *f, int n) {
 	printf("Assertion '%s' failed in %s, line %d\n", a, f, n);
 	abort();
 	return 1;
