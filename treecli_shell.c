@@ -254,6 +254,9 @@ int32_t treecli_shell_print_parser_result(struct treecli_shell *sh, int32_t res)
 		if (res == TREECLI_PARSER_PARSE_LINE_VALUE_FAILED) {
 			sh->print_handler("error: value parsing failed\n", sh->print_handler_ctx);
 		}
+		if (res == TREECLI_PARSER_PARSE_LINE_MALFORMED_TOKEN) {
+			sh->print_handler("error: malformed token\n", sh->print_handler_ctx);
+		}
 		lineedit_escape_print(&(sh->line), ESC_DEFAULT, 0);
 		return TREECLI_SHELL_PRINT_PARSER_RESULT_OK;
 

@@ -147,6 +147,17 @@ int32_t treecli_token_get(struct treecli_parser *parser, const char **pos, const
 		while (**pos == '.') {
 			(*pos)++;
 		}
+	} else if (**pos == '"') {
+		(*pos)++;
+		while (**pos != '"') {
+			if (**pos != '\0') {
+				(*pos)++;
+			} else {
+				return TREECLI_TOKEN_GET_FAILED;
+			}
+		}
+		(*pos)++;
+
 	}
 
 	*len = *pos - *token;
@@ -363,6 +374,10 @@ int32_t treecli_parser_parse_line(struct treecli_parser *parser, const char *lin
 
 	if (res == TREECLI_TOKEN_GET_UNEXPECTED) {
 		return TREECLI_PARSER_PARSE_LINE_UNEXPECTED_TOKEN;
+	}
+
+	if (res == TREECLI_TOKEN_GET_MALFORMED) {
+		return TREECLI_PARSER_PARSE_LINE_MALFORMED_TOKEN;
 	}
 
 	return TREECLI_PARSER_PARSE_LINE_OK;
@@ -882,6 +897,11 @@ int32_t treecli_parser_str_to_value(struct treecli_parser *parser, const struct 
 
 		case TREECLI_VALUE_STR: {
 				if (value->set != NULL) {
+					/* Strip the leading and trailing double qoutes. */
+					if (s[0] == '"' && s[len - 1] == '"') {
+						s += 1;
+						len -= 2;
+					}
 					value->set(parser, value->get_set_context, value, (void *)s, len);
 				}
 			}

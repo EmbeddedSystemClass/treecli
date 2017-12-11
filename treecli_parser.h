@@ -280,6 +280,7 @@ int32_t treecli_token_get(struct treecli_parser *parser, const char **pos, const
 #define TREECLI_TOKEN_GET_FAILED -1
 #define TREECLI_TOKEN_GET_NONE -2
 #define TREECLI_TOKEN_GET_UNEXPECTED -3
+#define TREECLI_TOKEN_GET_MALFORMED -4
 
 /**
  * Initializes parser context. It is used to parse lines of configuration, execute
@@ -327,7 +328,7 @@ int32_t treecli_parser_parse_line(struct treecli_parser *parser, const char *lin
 #define TREECLI_PARSER_PARSE_LINE_VALUE_FAILED -6
 #define TREECLI_PARSER_PARSE_LINE_EXPECTING_VALUE -7
 #define TREECLI_PARSER_PARSE_LINE_UNEXPECTED_TOKEN -8
-
+#define TREECLI_PARSER_PARSE_LINE_MALFORMED_TOKEN -9
 
 int32_t treecli_parser_set_print_handler(struct treecli_parser *parser, int32_t (*print_handler)(const char *line, void *ctx), void *ctx);
 #define TREECLI_PARSER_SET_PRINT_HANDLER_OK 0
