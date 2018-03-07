@@ -60,19 +60,25 @@ int32_t treecli_print_tree(const struct treecli_node *top, int32_t indent) {
 }
 */
 
-int32_t treecli_parser_pos_print(struct treecli_parser *parser) {
+int32_t treecli_parser_pos_print(struct treecli_parser *parser, bool no_delimiter) {
 	if (u_assert(parser != NULL) ||
 	    u_assert(parser->print_handler != NULL)) {
 		return TREECLI_PARSER_POS_PRINT_FAILED;
 	}
 
 	uint32_t len = 0;
-	parser->print_handler("/", parser->print_handler_ctx);
-	len += 1;
+	if (no_delimiter == false) {
+		parser->print_handler("/", parser->print_handler_ctx);
+		len += 1;
+	}
 
 	for (uint32_t i = 0; i < parser->pos.depth; i++) {
 		if (i > 0) {
-			parser->print_handler("/", parser->print_handler_ctx);
+			if (no_delimiter) {
+				parser->print_handler(" ", parser->print_handler_ctx);
+			} else {
+				parser->print_handler("/", parser->print_handler_ctx);
+			}
 			len += 1;
 		}
 		if (parser->pos.levels[i].node != NULL) {

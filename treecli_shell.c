@@ -130,7 +130,7 @@ int32_t treecli_shell_prompt_callback(struct lineedit *le, void *ctx) {
 		lineedit_escape_print(le, ESC_COLOR, sh->prompt_color);
 
 		/* print actual working position in the tree */
-		uint32_t ret = treecli_parser_pos_print(&(sh->parser));
+		uint32_t ret = treecli_parser_pos_print(&(sh->parser), false);
 		if (ret > 0) {
 			len += ret;
 		}

@@ -252,7 +252,7 @@ int32_t treecli_print_tree(const struct treecli_node *top, int32_t indent);
 #define TREECLI_PRINT_TREE_OK 0
 #define TREECLI_PRINT_TREE_FAILED -1
 
-int32_t treecli_parser_pos_print(struct treecli_parser *parser);
+int32_t treecli_parser_pos_print(struct treecli_parser *parser, bool no_delimiter);
 #define TREECLI_PARSER_POS_PRINT_OK 0
 #define TREECLI_PARSER_POS_PRINT_FAILED -1
 
